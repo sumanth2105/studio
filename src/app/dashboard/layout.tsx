@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link';
 import {
   HeartPulse,
@@ -6,6 +8,7 @@ import {
   ShieldCheck,
   User,
   Files,
+  LogOut,
 } from 'lucide-react';
 
 import {
@@ -21,12 +24,75 @@ import {
 } from '@/components/ui/sidebar';
 import { Header } from '@/components/dashboard/header';
 import { Button } from '@/components/ui/button';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import type { UserRole } from '@/lib/types';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+
+  useEffect(() => {
+    // In a real app, this would come from an auth context.
+    // For now, we'll use localStorage.
+    const role = localStorage.getItem('userRole') as UserRole;
+    setUserRole(role || 'holder');
+  }, []);
+
+  const getIsActive = (path: string) => {
+    if (path === '/dashboard') {
+        return pathname === '/dashboard';
+    }
+    return pathname.startsWith(path);
+  }
+
+  const renderSidebarContent = () => {
+    if (!userRole) return null;
+
+    switch (userRole) {
+      case 'holder':
+        return (
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={getIsActive('/dashboard')}>
+              <Link href="/dashboard">
+                <LayoutDashboard />
+                Holder Dashboard
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      case 'hospital':
+        return (
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={getIsActive('/dashboard/hospital')}>
+              <Link href="/dashboard/hospital">
+                <Hospital />
+                Hospital Portal
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      case 'insurer':
+        return (
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer')}>
+              <Link href="/dashboard/insurer">
+                <ShieldCheck />
+                Insurer Portal
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      default:
+        return null;
+    }
+  };
+
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -50,41 +116,13 @@ export default function DashboardLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {/* Holder Section */}
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive>
-                <Link href="/dashboard">
-                  <LayoutDashboard />
-                  Holder Dashboard
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            {/* Hospital Section */}
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/dashboard/hospital">
-                  <Hospital />
-                  Hospital Portal
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            {/* Insurer Section */}
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/dashboard/insurer">
-                  <ShieldCheck />
-                  Insurer Portal
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {renderSidebarContent()}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className='p-4'>
             <Button variant="outline" asChild>
-                <Link href="/">
-                    <User className="mr-2"/> Switch Role
+                <Link href="/login">
+                    <LogOut className="mr-2"/> Switch Role
                 </Link>
             </Button>
         </SidebarFooter>

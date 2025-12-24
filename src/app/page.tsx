@@ -28,7 +28,7 @@ export default function Home() {
           <h1 className="text-2xl font-bold font-headline text-primary">Suraksha Kavach</h1>
         </div>
         <Button asChild>
-          <Link href="/dashboard">Login</Link>
+          <Link href="/login">Login</Link>
         </Button>
       </header>
 
@@ -42,7 +42,7 @@ export default function Home() {
               Suraksha Kavach eliminates treatment delays with a trust-based platform, ensuring you get the emergency care you need, instantly.
             </p>
             <Button size="lg" asChild>
-              <Link href="/dashboard">Access Your Dashboard</Link>
+              <Link href="/login">Access Your Dashboard</Link>
             </Button>
           </div>
         </section>
