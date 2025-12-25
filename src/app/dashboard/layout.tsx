@@ -60,6 +60,14 @@ export default function DashboardLayout({
       case 'holder':
         return (
           <>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard')}>
+                <Link href="/dashboard">
+                  <LayoutDashboard />
+                  Dashboard
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={getIsActive('/dashboard/profile')}>
                 <Link href="/dashboard/profile">
