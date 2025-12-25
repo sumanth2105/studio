@@ -3,14 +3,13 @@
 
 import Link from 'next/link';
 import {
-  HeartPulse,
+  Heart,
   Hospital,
   LayoutDashboard,
   ShieldCheck,
   User,
   Files,
   LogOut,
-  Info,
   UploadCloud,
 } from 'lucide-react';
 
@@ -77,14 +76,6 @@ export default function DashboardLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/personal-info')}>
-                <Link href="/dashboard/personal-info">
-                  <Info />
-                  Personal Info
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={getIsActive('/dashboard/my-claims')}>
                 <Link href="/dashboard/my-claims">
                   <Files />
@@ -97,6 +88,14 @@ export default function DashboardLayout({
                 <Link href="/dashboard/documents">
                   <UploadCloud />
                   Documents
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/consent')}>
+                <Link href="/dashboard/consent">
+                  <Heart />
+                  Consent
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
