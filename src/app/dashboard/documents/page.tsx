@@ -209,42 +209,43 @@ export default function DocumentsPage() {
                             </div>
                         </ScrollArea>
                         
-                         {uploadStatus[doc.id] !== 'uploaded' ? (
-                            <>
-                                <div className="flex items-center space-x-2 pt-2">
-                                    <Checkbox id="consent" checked={declarationConsent} onCheckedChange={(checked) => setDeclarationConsent(Boolean(checked))} />
-                                    <Label htmlFor="consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                       I acknowledge and give my consent.
-                                    </Label>
-                                </div>
-                                 <Button
-                                    onClick={handleDeclarationSubmit}
-                                    disabled={!declarationConsent || uploadStatus[doc.id] === 'uploading'}
-                                    className="w-full md:w-auto"
-                                >
-                                    {uploadStatus[doc.id] === 'uploading' ? (
-                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                    ) : (
-                                        <CheckCircle className="h-4 w-4 mr-2" />
-                                    )}
-                                    Submit Declaration
-                                </Button>
-                            </>
-                         ) : (
-                             <p className="text-sm text-green-600 font-medium mt-2">
-                                Declaration submitted on {new Date().toLocaleString()}.
-                            </p>
-                         )}
+                         <div className='flex flex-col items-start gap-4'>
+                             {uploadStatus[doc.id] !== 'uploaded' ? (
+                                <>
+                                    <div className="flex items-center space-x-2 pt-2">
+                                        <Checkbox id="consent" checked={declarationConsent} onCheckedChange={(checked) => setDeclarationConsent(Boolean(checked))} />
+                                        <Label htmlFor="consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                           I acknowledge and give my consent.
+                                        </Label>
+                                    </div>
+                                     <Button
+                                        onClick={handleDeclarationSubmit}
+                                        disabled={!declarationConsent || uploadStatus[doc.id] === 'uploading'}
+                                    >
+                                        {uploadStatus[doc.id] === 'uploading' ? (
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                        ) : (
+                                            <CheckCircle className="h-4 w-4 mr-2" />
+                                        )}
+                                        Submit Declaration
+                                    </Button>
+                                </>
+                             ) : (
+                                 <p className="text-sm text-green-600 font-medium mt-2">
+                                    Declaration submitted on {new Date().toLocaleString()}.
+                                </p>
+                             )}
 
-                        {uploadStatus[doc.id] === 'error' && (
-                             <p className="text-sm text-destructive font-medium mt-2">
-                                Submission failed. Please try again.
-                            </p>
-                        )}
+                            {uploadStatus[doc.id] === 'error' && (
+                                 <p className="text-sm text-destructive font-medium mt-2">
+                                    Submission failed. Please try again.
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
             ) : (
-             <div className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 border rounded-lg">
+             <div className="flex flex-col md:flex-row items-center gap-4 p-4 border rounded-lg">
                 <div className="flex-shrink-0">{getStatusIcon(uploadStatus[doc.id], doc.id)}</div>
                 <div className="flex-1">
                     <h4 className="font-semibold">
@@ -258,7 +259,7 @@ export default function DocumentsPage() {
                         <p className="text-sm text-green-600 font-medium mt-1">Uploaded: {files[doc.id]?.name}</p>
                      )}
                 </div>
-                <div className="flex gap-2 w-full md:w-auto">
+                <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
                    <Input
                     id={doc.id}
                     type="file"
@@ -267,7 +268,7 @@ export default function DocumentsPage() {
                     disabled={uploadStatus[doc.id] === 'uploading'}
                   />
                   <Button asChild variant="outline" className="flex-1">
-                    <label htmlFor={doc.id}>
+                    <label htmlFor={doc.id} className='cursor-pointer'>
                       {files[doc.id] ? 'Change File' : 'Select File'}
                     </label>
                   </Button>
@@ -292,5 +293,3 @@ export default function DocumentsPage() {
     </Card>
   );
 }
-
-    
