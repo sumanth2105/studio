@@ -9,6 +9,7 @@ import {
   User,
   Files,
   LogOut,
+  Info,
 } from 'lucide-react';
 
 import {
@@ -62,6 +63,14 @@ export default function DashboardLayout({
                 <Link href="/dashboard">
                   <LayoutDashboard />
                   Dashboard
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/personal-info')}>
+                <Link href="/dashboard/personal-info">
+                  <Info />
+                  Personal Info
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
