@@ -11,6 +11,7 @@ import {
   Files,
   LogOut,
   Info,
+  UploadCloud,
 } from 'lucide-react';
 
 import {
@@ -60,8 +61,8 @@ export default function DashboardLayout({
         return (
           <>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard')}>
-                <Link href="/dashboard">
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/profile')}>
+                <Link href="/dashboard/profile">
                   <User />
                   Profile
                 </Link>
@@ -80,6 +81,14 @@ export default function DashboardLayout({
                 <Link href="/dashboard/my-claims">
                   <Files />
                   My Claims
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/documents')}>
+                <Link href="/dashboard/documents">
+                  <UploadCloud />
+                  Documents
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
