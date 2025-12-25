@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -8,11 +9,14 @@ import {
 import {
   Shield,
   Users,
+  FileText,
+  Heart,
+  User,
 } from 'lucide-react';
 import { mockHolder } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
 
-export default function HolderDashboardPage() {
+export default function ProfilePage() {
   const { name, trustScore, policies, emergencyNominee } = mockHolder;
   const activePolicy = policies.find((p) => p.status === 'Active');
 
@@ -52,6 +56,32 @@ export default function HolderDashboardPage() {
             </div>
           </CardContent>
         </Card>
+        <Card>
+         <CardHeader>
+          <CardTitle>Profile & Settings</CardTitle>
+          <CardDescription>Manage your profile, documents, and preferences.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+           <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted">
+              <div className='flex items-center gap-4'>
+                <User className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium">Update Profile</span>
+              </div>
+           </div>
+            <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted">
+                <div className='flex items-center gap-4'>
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                    <span className="font-medium">View Documents</span>
+                </div>
+           </div>
+            <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted">
+                <div className='flex items-center gap-4'>
+                    <Heart className="w-5 h-5 text-muted-foreground" />
+                    <span className="font-medium">Consent Preferences</span>
+                </div>
+           </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

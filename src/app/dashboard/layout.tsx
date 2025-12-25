@@ -1,3 +1,4 @@
+
 'use client'
 
 import Link from 'next/link';
@@ -61,8 +62,8 @@ export default function DashboardLayout({
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={getIsActive('/dashboard')}>
                 <Link href="/dashboard">
-                  <LayoutDashboard />
-                  Dashboard
+                  <User />
+                  Profile
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -79,14 +80,6 @@ export default function DashboardLayout({
                 <Link href="/dashboard/my-claims">
                   <Files />
                   My Claims
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/profile')}>
-                <Link href="/dashboard/profile">
-                  <User />
-                  Profile
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
