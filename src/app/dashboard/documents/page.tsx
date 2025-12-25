@@ -25,6 +25,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type DocumentType =
   | 'aadhaar'
@@ -192,53 +193,54 @@ export default function DocumentsPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {documentList.map((doc, index) => (
+        {documentList.map((doc) => (
           <div key={doc.id}>
             {doc.id === 'self_declaration' ? (
-                 <div className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 border rounded-lg">
-                    <div className="flex-shrink-0">{getStatusIcon(uploadStatus[doc.id], doc.id)}</div>
+                 <div className="flex flex-col md:flex-row items-start gap-4 p-4 border rounded-lg">
+                    <div className="flex-shrink-0 mt-1">{getStatusIcon(uploadStatus[doc.id], doc.id)}</div>
                      <div className="flex-1 space-y-4">
                         <h4 className="font-semibold">
                             {doc.name} {doc.required && <span className="text-destructive">*</span>}
                         </h4>
-                        <div className="p-4 bg-muted/50 rounded-md space-y-3 text-sm text-muted-foreground">
-                            {selfDeclarationText.map((text, i) => <p key={i}>{text}</p>)}
-                            <p className="font-medium">Date: {new Date().toLocaleDateString()}</p>
-                        </div>
-
-                         {uploadStatus[doc.id] !== 'uploaded' && (
-                             <div className="flex items-center space-x-2 pt-2">
-                                <Checkbox id="consent" checked={declarationConsent} onCheckedChange={(checked) => setDeclarationConsent(Boolean(checked))} />
-                                <Label htmlFor="consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                   I acknowledge and give my consent.
-                                </Label>
+                        <ScrollArea className="h-48 w-full rounded-md border bg-muted/50 p-4">
+                            <div className="space-y-3 text-sm text-muted-foreground">
+                                {selfDeclarationText.map((text, i) => <p key={i}>{text}</p>)}
+                                <p className="font-medium pt-2">Date: {new Date().toLocaleDateString()}</p>
                             </div>
-                         )}
-
-                         {uploadStatus[doc.id] === 'uploaded' && (
-                            <p className="text-sm text-green-600 font-medium mt-2">
+                        </ScrollArea>
+                        
+                         {uploadStatus[doc.id] !== 'uploaded' ? (
+                            <>
+                                <div className="flex items-center space-x-2 pt-2">
+                                    <Checkbox id="consent" checked={declarationConsent} onCheckedChange={(checked) => setDeclarationConsent(Boolean(checked))} />
+                                    <Label htmlFor="consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                       I acknowledge and give my consent.
+                                    </Label>
+                                </div>
+                                 <Button
+                                    onClick={handleDeclarationSubmit}
+                                    disabled={!declarationConsent || uploadStatus[doc.id] === 'uploading'}
+                                    className="w-full md:w-auto"
+                                >
+                                    {uploadStatus[doc.id] === 'uploading' ? (
+                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    ) : (
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                    )}
+                                    Submit Declaration
+                                </Button>
+                            </>
+                         ) : (
+                             <p className="text-sm text-green-600 font-medium mt-2">
                                 Declaration submitted on {new Date().toLocaleString()}.
                             </p>
-                        )}
+                         )}
+
                         {uploadStatus[doc.id] === 'error' && (
                              <p className="text-sm text-destructive font-medium mt-2">
                                 Submission failed. Please try again.
                             </p>
                         )}
-                    </div>
-                     <div className="flex w-full md:w-auto">
-                        <Button
-                            onClick={handleDeclarationSubmit}
-                            disabled={!declarationConsent || uploadStatus[doc.id] === 'uploading' || uploadStatus[doc.id] === 'uploaded'}
-                            className="w-full"
-                        >
-                            {uploadStatus[doc.id] === 'uploading' ? (
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            ) : (
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                            )}
-                            Submit Declaration
-                        </Button>
                     </div>
                 </div>
             ) : (
@@ -290,3 +292,5 @@ export default function DocumentsPage() {
     </Card>
   );
 }
+
+    
