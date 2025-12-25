@@ -18,10 +18,13 @@ import {
   Paperclip,
   Upload,
   AlertCircle,
+  FileText,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 type DocumentType =
   | 'aadhaar'
@@ -73,6 +76,17 @@ const documentList: {
   },
 ];
 
+const selfDeclarationText = [
+    "All the information and documents provided by me on this platform are true, correct, and complete to the best of my knowledge.",
+    "I confirm that the uploaded documents belong only to me and have not been altered, forged, or misrepresented.",
+    "I understand that any false information or fraudulent documents may result in: Rejection or cancellation of insurance claims, Suspension of platform access, or Legal action as per applicable laws.",
+    "I authorize the platform and associated insurance providers to verify the submitted information with relevant authorities or service providers, strictly for claim and verification purposes.",
+    "I provide explicit consent for my information to be accessed by: Authorized hospitals during medical emergencies, and Authorized insurance companies for claim processing.",
+    "I acknowledge that my data will be processed in accordance with applicable data protection and privacy laws.",
+    "I understand that emergency treatment approvals may be provided based on system trust evaluation and that final claim settlement may occur later.",
+];
+
+
 export default function DocumentsPage() {
   const { toast } = useToast();
   const [files, setFiles] = useState<Record<DocumentType, File | null>>({
@@ -93,6 +107,7 @@ export default function DocumentsPage() {
     bank_proof: 'idle',
     self_declaration: 'idle',
   });
+  const [declarationConsent, setDeclarationConsent] = useState(false);
 
   const handleFileChange = (
     docId: DocumentType,
@@ -111,12 +126,9 @@ export default function DocumentsPage() {
 
     setUploadStatus((prev) => ({ ...prev, [docId]: 'uploading' }));
 
-    // Simulate upload
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    // In a real app, you would upload the file to a storage service
-    // and then handle the response.
-    const isSuccess = Math.random() > 0.1; // 90% success rate for demo
+    const isSuccess = Math.random() > 0.1;
 
     if (isSuccess) {
       setUploadStatus((prev) => ({ ...prev, [docId]: 'uploaded' }));
@@ -134,7 +146,30 @@ export default function DocumentsPage() {
     }
   };
   
-  const getStatusIcon = (status: 'idle' | 'uploading' | 'uploaded' | 'error') => {
+    const handleDeclarationSubmit = async () => {
+        setUploadStatus((prev) => ({ ...prev, self_declaration: 'uploading' }));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        
+        const isSuccess = Math.random() > 0.1;
+
+        if (isSuccess) {
+            setUploadStatus((prev) => ({ ...prev, self_declaration: 'uploaded' }));
+            toast({
+                title: 'Declaration Submitted',
+                description: 'Your self-declaration has been recorded.',
+            });
+        } else {
+            setUploadStatus((prev) => ({ ...prev, self_declaration: 'error' }));
+            toast({
+                variant: 'destructive',
+                title: 'Submission Failed',
+                description: 'Could not submit declaration. Please try again.',
+            });
+        }
+    };
+
+
+  const getStatusIcon = (status: 'idle' | 'uploading' | 'uploaded' | 'error', docId: DocumentType) => {
     switch (status) {
       case 'uploading':
         return <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />;
@@ -143,7 +178,7 @@ export default function DocumentsPage() {
        case 'error':
         return <AlertCircle className="h-5 w-5 text-destructive" />;
       default:
-        return <Paperclip className="h-5 w-5 text-muted-foreground" />;
+        return docId === 'self_declaration' ? <FileText className="h-5 w-5 text-muted-foreground" /> : <Paperclip className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -152,15 +187,63 @@ export default function DocumentsPage() {
       <CardHeader>
         <CardTitle>Document Upload Center</CardTitle>
         <CardDescription>
-          Please upload the required documents for verification. This will help
+          Please upload the required documents and provide your consent. This will help
           in building your trust score and ensuring faster claim processing.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {documentList.map((doc, index) => (
           <div key={doc.id}>
+            {doc.id === 'self_declaration' ? (
+                 <div className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 border rounded-lg">
+                    <div className="flex-shrink-0">{getStatusIcon(uploadStatus[doc.id], doc.id)}</div>
+                     <div className="flex-1 space-y-4">
+                        <h4 className="font-semibold">
+                            {doc.name} {doc.required && <span className="text-destructive">*</span>}
+                        </h4>
+                        <div className="p-4 bg-muted/50 rounded-md space-y-3 text-sm text-muted-foreground">
+                            {selfDeclarationText.map((text, i) => <p key={i}>{text}</p>)}
+                            <p className="font-medium">Date: {new Date().toLocaleDateString()}</p>
+                        </div>
+
+                         {uploadStatus[doc.id] !== 'uploaded' && (
+                             <div className="flex items-center space-x-2 pt-2">
+                                <Checkbox id="consent" checked={declarationConsent} onCheckedChange={(checked) => setDeclarationConsent(Boolean(checked))} />
+                                <Label htmlFor="consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                   I acknowledge and give my consent.
+                                </Label>
+                            </div>
+                         )}
+
+                         {uploadStatus[doc.id] === 'uploaded' && (
+                            <p className="text-sm text-green-600 font-medium mt-2">
+                                Declaration submitted on {new Date().toLocaleString()}.
+                            </p>
+                        )}
+                        {uploadStatus[doc.id] === 'error' && (
+                             <p className="text-sm text-destructive font-medium mt-2">
+                                Submission failed. Please try again.
+                            </p>
+                        )}
+                    </div>
+                     <div className="flex w-full md:w-auto">
+                        <Button
+                            onClick={handleDeclarationSubmit}
+                            disabled={!declarationConsent || uploadStatus[doc.id] === 'uploading' || uploadStatus[doc.id] === 'uploaded'}
+                            className="w-full"
+                        >
+                            {uploadStatus[doc.id] === 'uploading' ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : (
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                            )}
+                            Submit Declaration
+                        </Button>
+                    </div>
+                </div>
+            ) : (
              <div className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 border rounded-lg">
-                <div className="flex-shrink-0">{getStatusIcon(uploadStatus[doc.id])}</div>
+                <div className="flex-shrink-0">{getStatusIcon(uploadStatus[doc.id], doc.id)}</div>
                 <div className="flex-1">
                     <h4 className="font-semibold">
                         {doc.name} {doc.required && <span className="text-destructive">*</span>}
@@ -200,6 +283,7 @@ export default function DocumentsPage() {
                   </Button>
                 </div>
             </div>
+            )}
           </div>
         ))}
       </CardContent>
