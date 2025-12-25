@@ -435,7 +435,7 @@ export default function PersonalInfoPage() {
                   name="sumInsured"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sum Insured (INR)</FormLabel>
+                      <FormLabel>Sum Insured (₹)</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="e.g., 500000" {...field} />
                       </FormControl>
@@ -448,7 +448,7 @@ export default function PersonalInfoPage() {
                   name="remainingSum"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Remaining Sum (INR)</FormLabel>
+                      <FormLabel>Remaining Sum (₹)</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="e.g., 500000" {...field} />
                       </FormControl>
