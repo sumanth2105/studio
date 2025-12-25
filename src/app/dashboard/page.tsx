@@ -6,15 +6,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  FileText,
-  Heart,
   Shield,
-  User,
   Users,
 } from 'lucide-react';
-import { mockClaims, mockHolder } from '@/lib/data';
+import { mockHolder } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
-import { ClaimsTable } from '@/components/dashboard/claims-table';
 
 export default function HolderDashboardPage() {
   const { name, trustScore, policies, emergencyNominee } = mockHolder;
@@ -22,8 +18,7 @@ export default function HolderDashboardPage() {
 
   return (
     <div className="grid gap-6">
-      <div className="grid md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2">
+        <Card>
           <CardHeader>
             <CardTitle>Welcome back, {name}!</CardTitle>
             <CardDescription>
@@ -57,34 +52,6 @@ export default function HolderDashboardPage() {
             </div>
           </CardContent>
         </Card>
-        
-        <Card>
-           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Manage your profile and preferences.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-2">
-             <div className="flex items-center gap-4 p-3 hover:bg-muted rounded-lg cursor-pointer">
-                <User className="w-5 h-5 text-muted-foreground" />
-                <span className="font-medium">Update Profile</span>
-             </div>
-              <div className="flex items-center gap-4 p-3 hover:bg-muted rounded-lg cursor-pointer">
-                <FileText className="w-5 h-5 text-muted-foreground" />
-                <span className="font-medium">View Documents</span>
-             </div>
-              <div className="flex items-center gap-4 p-3 hover:bg-muted rounded-lg cursor-pointer">
-                <Heart className="w-5 h-5 text-muted-foreground" />
-                <span className="font-medium">Consent Preferences</span>
-             </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <ClaimsTable
-        claims={mockClaims}
-        title="Recent Claims"
-        description="A summary of your recent insurance claims."
-      />
     </div>
   );
 }

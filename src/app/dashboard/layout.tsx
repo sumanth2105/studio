@@ -56,14 +56,32 @@ export default function DashboardLayout({
     switch (userRole) {
       case 'holder':
         return (
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={getIsActive('/dashboard')}>
-              <Link href="/dashboard">
-                <LayoutDashboard />
-                Holder Dashboard
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard')}>
+                <Link href="/dashboard">
+                  <LayoutDashboard />
+                  Dashboard
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/my-claims')}>
+                <Link href="/dashboard/my-claims">
+                  <Files />
+                  My Claims
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/profile')}>
+                <Link href="/dashboard/profile">
+                  <User />
+                  Profile
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </>
         );
       case 'hospital':
         return (
