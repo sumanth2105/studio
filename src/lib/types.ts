@@ -79,11 +79,31 @@ export interface Holder extends User {
   healthRecords?: HealthRecord;
 }
 
+export interface HospitalDocument {
+    id: string;
+    name: string;
+    uploadDate: string;
+}
+
+export interface AuditLog {
+    id: string;
+    timestamp: string;
+    userId: string;
+    action: string;
+}
+
 export interface Hospital {
   id: string;
   name: string;
+  registrationId: string;
+  address: string;
+  networkType: 'Network' | 'Non-network';
+  contactEmail: string;
+  contactPhone: string;
   trustScore: number;
   logoUrl: string;
+  documents: HospitalDocument[];
+  auditLogs: AuditLog[];
 }
 
 export interface Insurer extends User {

@@ -77,8 +77,22 @@ export const mockHolder: Holder = {
 export const mockHospital: Hospital = {
   id: 'hosp-01',
   name: 'City Central Hospital',
+  registrationId: 'HOS-IN-DL-10293',
+  address: '123, Main Road, New Delhi, Delhi 110001',
+  networkType: 'Network',
+  contactEmail: 'admin@citycentral.hosp',
+  contactPhone: '011-23456789',
   trustScore: 92,
   logoUrl: hospitalLogo1,
+  documents: [
+    { id: 'doc-h1', name: 'Hospital Registration Certificate', uploadDate: '2022-01-15' },
+    { id: 'doc-h2', name: 'Fire Safety Clearance', uploadDate: '2023-06-20' },
+    { id: 'doc-h3', name: 'Accreditation Certificate (NABH)', uploadDate: '2023-08-01' },
+  ],
+  auditLogs: [
+    { id: 'log-1', timestamp: '2023-11-20T10:00:00Z', userId: 'admin-01', action: 'Updated contact phone number.' },
+    { id: 'log-2', timestamp: '2023-09-12T15:30:00Z', userId: 'admin-01', action: 'Updated contact email address.' },
+  ]
 };
 
 export const mockInsurer: Insurer = {
