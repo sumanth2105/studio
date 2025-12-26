@@ -40,9 +40,9 @@ export default function IncomingClaimsPage() {
   }
 
   const getSlaColor = (submissionDate: string) => {
-    const hours = (new Date().getTime() - new Date(submissionDate).getTime()) / (1000 * 60 * 60);
-    if (hours > 48) return 'text-destructive';
-    if (hours > 24) return 'text-yellow-600';
+    const days = (new Date().getTime() - new Date(submissionDate).getTime()) / (1000 * 60 * 60 * 24);
+    if (days > 2) return 'text-destructive';
+    if (days > 1) return 'text-yellow-600';
     return 'text-green-600';
   }
 
@@ -94,7 +94,7 @@ export default function IncomingClaimsPage() {
                         }).format(claim.claimAmount)}
                       </TableCell>
                        <TableCell className={cn("font-mono text-xs", getSlaColor(claim.submissionDate))}>
-                        {Math.round((new Date().getTime() - new Date(claim.submissionDate).getTime()) / (1000 * 60 * 60))}h ago
+                        {Math.round((new Date().getTime() - new Date(claim.submissionDate).getTime()) / (1000 * 60 * 60 * 24))}d ago
                       </TableCell>
                       <TableCell>
                         <ClaimStatusBadge status={claim.status} />
