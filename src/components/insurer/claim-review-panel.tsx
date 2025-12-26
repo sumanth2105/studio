@@ -19,6 +19,7 @@ import {
   ThumbsDown,
   CircleHelp,
   ShieldAlert,
+  ArrowRight,
 } from 'lucide-react';
 import type { Claim, Holder, Hospital } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ import { ClaimStatusBadge } from '../dashboard/claim-status-badge';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface ClaimReviewPanelProps {
   claim: Claim;
@@ -68,6 +70,15 @@ export function ClaimReviewPanel({
         </Button>
       </CardHeader>
       <CardContent className="flex-grow space-y-4 overflow-auto">
+         <Button asChild className="w-full">
+            <Link href={`/dashboard/insurer/claims/${claim.id}`}>
+                View Full Details
+                <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+         </Button>
+
+        <Separator />
+
         {/* Key Details */}
         <div className="space-y-3 text-sm">
           <div className="flex justify-between">
@@ -121,21 +132,6 @@ export function ClaimReviewPanel({
                     <p className="font-semibold">{hospital.name}</p>
                     <p className="text-xs text-muted-foreground">Reg ID: {hospital.registrationId}</p>
                 </div>
-            </div>
-        </div>
-
-        <Separator />
-
-        {/* Documents */}
-         <div className="space-y-3">
-            <h4 className='font-medium'>Attached Documents</h4>
-            <div className='space-y-2'>
-                {claim.documents.map(doc => (
-                    <div key={doc.id} className='flex items-center gap-2 text-sm text-primary hover:underline cursor-pointer'>
-                        <FileText className='h-4 w-4'/>
-                        <span>{doc.name}</span>
-                    </div>
-                ))}
             </div>
         </div>
         

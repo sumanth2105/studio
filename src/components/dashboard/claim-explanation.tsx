@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Lightbulb, Loader2, AlertCircle } from 'lucide-react';
@@ -47,34 +47,42 @@ export function ClaimExplanation({ claim, holder, hospital }: ClaimExplanationPr
     }
   };
 
-  return (
-    <div className="space-y-4">
-      <Button onClick={getExplanation} disabled={isLoading}>
-        {isLoading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Lightbulb className="mr-2 h-4 w-4" />
-        )}
-        {explanation ? 'Regenerate Explanation' : 'Explain This Decision'}
-      </Button>
+  useEffect(() => {
+    // Automatically fetch explanation on component mount
+    getExplanation();
+  }, [claim.id]);
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
 
-      {explanation && (
-        <Alert className="bg-primary/5 border-primary/20">
-          <Lightbulb className="h-4 w-4 text-primary" />
-          <AlertTitle className="text-primary">AI-Powered Explanation</AlertTitle>
-          <AlertDescription>
-            <p className="text-foreground">{explanation}</p>
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
-  );
+  if (isLoading) {
+      return (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Generating explanation...
+        </div>
+      )
+  }
+
+   if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (explanation) {
+    return (
+      <Alert className="bg-primary/5 border-primary/20">
+        <Lightbulb className="h-4 w-4 text-primary" />
+        <AlertTitle className="text-primary">AI-Powered Explanation</AlertTitle>
+        <AlertDescription>
+          <p className="text-foreground">{explanation}</p>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return null;
 }
