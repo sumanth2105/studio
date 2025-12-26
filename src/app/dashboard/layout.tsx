@@ -6,12 +6,12 @@ import Link from 'next/link';
 import {
   Heart,
   Hospital,
-  LayoutDashboard,
-  ShieldCheck,
-  User,
+  Shield,
   Files,
-  LogOut,
+  User,
+  ShieldCheck,
   UploadCloud,
+  LogOut,
 } from 'lucide-react';
 
 import {
@@ -65,6 +65,14 @@ export default function DashboardLayout({
                 <Link href="/dashboard">
                   <User />
                   Profile
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/trust-score')}>
+                <Link href="/dashboard/trust-score">
+                  <Shield />
+                  Trust Score
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
