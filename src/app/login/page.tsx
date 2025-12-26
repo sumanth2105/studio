@@ -62,6 +62,12 @@ const signUpSchema = z.object({
   address: z.string().min(1, 'Residential address is required'),
   aadhaar: z.string().length(12, 'Aadhaar must be 12 digits'),
   pan: z.string().optional(),
+  username: z.string().min(3, "Username must be at least 3 characters."),
+  password: z.string().min(8, "Password must be at least 8 characters."),
+  confirmPassword: z.string()
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
 });
 
 const otpSchema = z.object({
@@ -163,6 +169,47 @@ export default function LoginPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 max-h-[50vh] overflow-y-auto pr-3">
+                        <FormField
+                            control={signUpForm.control}
+                            name="username"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Username</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Choose a username" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                         />
+                         <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={signUpForm.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Password</FormLabel>
+                                    <FormControl>
+                                        <Input type="password" placeholder="Create a password" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={signUpForm.control}
+                                name="confirmPassword"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Confirm Password</FormLabel>
+                                    <FormControl>
+                                        <Input type="password" placeholder="Confirm your password" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                          <FormField
                             control={signUpForm.control}
                             name="fullName"
