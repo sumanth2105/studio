@@ -67,7 +67,7 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={getIsActive('/dashboard/personal-info')}>
                 <Link href="/dashboard/personal-info">
                   <User />
