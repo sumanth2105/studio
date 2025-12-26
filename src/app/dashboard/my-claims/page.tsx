@@ -1,3 +1,4 @@
+
 import { ClaimsTable } from '@/components/dashboard/claims-table';
 import { mockClaims } from '@/lib/data';
 

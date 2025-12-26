@@ -46,8 +46,8 @@ export default function DashboardLayout({
   }, []);
 
   const getIsActive = (path: string) => {
-    if (path === '/dashboard/profile') {
-        return pathname === '/dashboard/profile' || pathname === '/dashboard';
+    if (path === '/dashboard' || path === '/dashboard/profile') {
+        return pathname === '/dashboard' || pathname === '/dashboard/profile';
     }
     return pathname.startsWith(path);
   }
@@ -68,18 +68,18 @@ export default function DashboardLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/personal-info')}>
-                <Link href="/dashboard/personal-info">
-                  <User />
-                  Personal Info
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={getIsActive('/dashboard/my-claims')}>
                 <Link href="/dashboard/my-claims">
                   <Files />
                   My Claims
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/personal-info')}>
+                <Link href="/dashboard/personal-info">
+                  <User />
+                  Personal Info
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
