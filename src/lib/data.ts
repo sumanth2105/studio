@@ -1,5 +1,5 @@
 
-import type { Holder, Hospital, Claim, Policy, Insurer } from './types';
+import type { Holder, Hospital, Claim, Policy, Insurer, VerificationRequest } from './types';
 import { placeholderImages } from './placeholder-images';
 
 const userAvatar1 =
@@ -238,5 +238,39 @@ export const mockClaims: Claim[] = [
         url: '#',
       },
     ],
+  },
+];
+
+
+export const mockVerificationRequests: VerificationRequest[] = [
+  {
+    id: 'hosp-req-1',
+    name: 'Wellness General Hospital',
+    registrationId: 'HOS-IN-MH-40129',
+    dateOfRequest: '2023-11-18',
+    status: 'Pending Verification',
+    claimsCount: 150,
+    disputeRatio: 0.05,
+    trustScore: 88,
+  },
+  {
+    id: 'hosp-req-2',
+    name: 'Unity Health Care',
+    registrationId: 'HOS-IN-KA-88765',
+    dateOfRequest: '2023-11-12',
+    status: 'Pending Verification',
+    claimsCount: 320,
+    disputeRatio: 0.02,
+    trustScore: 94,
+  },
+  {
+    id: 'hosp-req-3',
+    name: 'Sunrise Medical Center',
+    registrationId: 'HOS-IN-TN-55432',
+    dateOfRequest: '2023-11-05',
+    status: 'Additional Documents Required',
+    claimsCount: 80,
+    disputeRatio: 0.1,
+    trustScore: 75,
   },
 ];

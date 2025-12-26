@@ -109,3 +109,20 @@ export interface Hospital {
 export interface Insurer extends User {
   role: 'insurer';
 }
+
+export type VerificationStatus =
+  | 'Pending Verification'
+  | 'Additional Documents Required'
+  | 'Verified'
+  | 'Rejected';
+
+export interface VerificationRequest {
+  id: string;
+  name: string;
+  registrationId: string;
+  dateOfRequest: string;
+  status: VerificationStatus;
+  claimsCount: number;
+  disputeRatio: number;
+  trustScore: number;
+}
