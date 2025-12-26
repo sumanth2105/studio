@@ -1,3 +1,4 @@
+
 export type UserRole = 'holder' | 'hospital' | 'insurer';
 
 export interface User {
@@ -24,7 +25,13 @@ export interface ClaimTimelineEvent {
   description: string;
 }
 
-export type ClaimStatus = 'Pending' | 'Auto-Approved' | 'Manual Review' | 'Approved' | 'Rejected';
+export type ClaimStatus =
+  | 'Pending'
+  | 'Auto-Approved'
+  | 'Manual Review'
+  | 'Approved'
+  | 'Rejected'
+  | 'Settled';
 
 export interface MedicalDocument {
   id: string;
@@ -48,6 +55,19 @@ export interface Claim {
   doctorNotes: string;
 }
 
+export interface HealthRecord {
+    vitals: {
+        height: string;
+        weight: string;
+        bloodPressure: string;
+        bloodGroup: string;
+    };
+    allergies: { id: string; name: string; severity: 'Mild' | 'Moderate' | 'Severe' }[];
+    medications: { id: string; name: string; dosage: string; frequency: string }[];
+    conditions: { id: string; name: string; diagnosedDate: string }[];
+    recentVisits: { id: string; date: string; doctor: string; reason: string; hospital: string }[];
+}
+
 export interface Holder extends User {
   role: 'holder';
   trustScore: number;
@@ -56,6 +76,7 @@ export interface Holder extends User {
     name: string;
     mobile: string;
   };
+  healthRecords?: HealthRecord;
 }
 
 export interface Hospital {
@@ -66,5 +87,5 @@ export interface Hospital {
 }
 
 export interface Insurer extends User {
-    role: 'insurer';
+  role: 'insurer';
 }

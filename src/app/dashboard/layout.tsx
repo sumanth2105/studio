@@ -1,10 +1,9 @@
 
-
-'use client'
+'use client';
 
 import Link from 'next/link';
 import {
-  Heart,
+  HeartPulse,
   Hospital,
   Shield,
   Files,
@@ -12,6 +11,7 @@ import {
   ShieldCheck,
   UploadCloud,
   LogOut,
+  Heart,
 } from 'lucide-react';
 
 import {
@@ -48,10 +48,10 @@ export default function DashboardLayout({
 
   const getIsActive = (path: string) => {
     if (path === '/dashboard') {
-        return pathname === '/dashboard';
+      return pathname === '/dashboard';
     }
     return pathname.startsWith(path);
-  }
+  };
 
   const renderSidebarContent = () => {
     if (!userRole) return null;
@@ -68,16 +68,33 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/trust-score')}>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={getIsActive('/dashboard/trust-score')}
+              >
                 <Link href="/dashboard/trust-score">
                   <Shield />
                   Trust Score
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={getIsActive('/dashboard/health-records')}
+              >
+                <Link href="/dashboard/health-records">
+                  <HeartPulse />
+                  Health Records
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/my-claims')}>
+              <SidebarMenuButton
+                asChild
+                isActive={getIsActive('/dashboard/my-claims')}
+              >
                 <Link href="/dashboard/my-claims">
                   <Files />
                   My Claims
@@ -85,7 +102,10 @@ export default function DashboardLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/personal-info')}>
+              <SidebarMenuButton
+                asChild
+                isActive={getIsActive('/dashboard/personal-info')}
+              >
                 <Link href="/dashboard/personal-info">
                   <User />
                   Personal Info
@@ -93,15 +113,21 @@ export default function DashboardLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/documents')}>
+              <SidebarMenuButton
+                asChild
+                isActive={getIsActive('/dashboard/documents')}
+              >
                 <Link href="/dashboard/documents">
                   <UploadCloud />
                   Documents
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/consent')}>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={getIsActive('/dashboard/consent')}
+              >
                 <Link href="/dashboard/consent">
                   <Heart />
                   Consent
@@ -113,7 +139,10 @@ export default function DashboardLayout({
       case 'hospital':
         return (
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={getIsActive('/dashboard/hospital')}>
+            <SidebarMenuButton
+              asChild
+              isActive={getIsActive('/dashboard/hospital')}
+            >
               <Link href="/dashboard/hospital">
                 <Hospital />
                 Hospital Portal
@@ -124,7 +153,10 @@ export default function DashboardLayout({
       case 'insurer':
         return (
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer')}>
+            <SidebarMenuButton
+              asChild
+              isActive={getIsActive('/dashboard/insurer')}
+            >
               <Link href="/dashboard/insurer">
                 <ShieldCheck />
                 Insurer Portal
@@ -136,7 +168,6 @@ export default function DashboardLayout({
         return null;
     }
   };
-
 
   return (
     <SidebarProvider>
@@ -156,20 +187,20 @@ export default function DashboardLayout({
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               <path d="m12 10 4 2-4 2-4-2 4-2z" />
             </svg>
-            <h1 className="text-xl font-bold font-headline text-primary">Suraksha Kavach</h1>
+            <h1 className="text-xl font-bold font-headline text-primary">
+              Suraksha Kavach
+            </h1>
           </div>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
-            {renderSidebarContent()}
-          </SidebarMenu>
+          <SidebarMenu>{renderSidebarContent()}</SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className='p-4'>
-            <Button variant="outline" asChild>
-                <Link href="/login">
-                    <LogOut className="mr-2"/> Switch Role
-                </Link>
-            </Button>
+        <SidebarFooter className="p-4">
+          <Button variant="outline" asChild>
+            <Link href="/login">
+              <LogOut className="mr-2" /> Switch Role
+            </Link>
+          </Button>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
