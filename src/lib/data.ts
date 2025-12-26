@@ -113,7 +113,7 @@ export const mockClaims: Claim[] = [
     policyId: 'policy-01',
     claimAmount: 75000,
     diagnosis: 'Appendicitis',
-    status: 'Auto-Approved',
+    status: 'Settled',
     submissionDate: '2023-10-26',
     doctorNotes:
       'Patient presented with acute abdominal pain. Diagnosis confirmed via ultrasound. Appendectomy performed successfully. Post-op recovery is normal.',
@@ -205,7 +205,7 @@ export const mockClaims: Claim[] = [
     policyId: 'policy-01',
     claimAmount: 32000,
     diagnosis: 'Malaria Treatment',
-    status: 'Approved',
+    status: 'Settled',
     submissionDate: '2023-08-02',
     doctorNotes:
       'Patient admitted with high fever and chills. Blood tests confirm Malaria. Standard treatment protocol administered.',
