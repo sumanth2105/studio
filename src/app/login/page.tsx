@@ -50,7 +50,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { sendOtp } from '@/ai/flows/send-otp';
 
 
 const signUpSchema = z.object({
@@ -91,6 +90,17 @@ export default function LoginPage() {
 
   const signUpForm = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
+    defaultValues: {
+        fullName: '',
+        contactNumber: '',
+        email: '',
+        address: '',
+        aadhaar: '',
+        pan: '',
+        username: '',
+        password: '',
+        confirmPassword: '',
+    }
   });
 
   const otpForm = useForm<OtpFormValues>({
@@ -118,24 +128,17 @@ export default function LoginPage() {
     setErrorMessage(null);
     console.log('Signing up with data:', data);
 
-    try {
-      const result = await sendOtp({ to: `+91${data.contactNumber}` });
-      if (result.success) {
-        setDemoOtp(result.otp || null); // Store demo OTP
-        setSignUpStep('otp');
-        toast({
-            title: 'OTP Sent',
-            description: `An OTP has been sent to ${data.contactNumber}.`
-        });
-      } else {
-        setErrorMessage(result.message);
-      }
-    } catch (error) {
-        console.error(error);
-        setErrorMessage('An unexpected error occurred while sending the OTP.');
-    } finally {
-        setIsLoading(false);
-    }
+    // Simulate sending OTP and show it for demo
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setDemoOtp(generatedOtp);
+    setSignUpStep('otp');
+    toast({
+        title: 'OTP Sent',
+        description: `An OTP has been sent to ${data.contactNumber}.`
+    });
+        
+    setIsLoading(false);
   }
 
   const handleOtpSubmit = async (data: OtpFormValues) => {
@@ -144,7 +147,7 @@ export default function LoginPage() {
     console.log('Verifying OTP:', data);
     
     // In a real app, you'd call a `verifyOtp` flow.
-    // For this demo, we compare with the OTP returned from the `sendOtp` flow.
+    // For this demo, we compare with the OTP stored in state.
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     if (data.otp === demoOtp) {
