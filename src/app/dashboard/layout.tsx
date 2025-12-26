@@ -17,6 +17,13 @@ import {
   History,
   Users,
   Building,
+  BarChart,
+  ShieldAlert,
+  FileX,
+  FileClock,
+  ClipboardCheck,
+  Inbox,
+  LayoutGrid,
 } from 'lucide-react';
 
 import {
@@ -52,8 +59,8 @@ export default function DashboardLayout({
   }, []);
 
   const getIsActive = (path: string) => {
-    if (path === '/dashboard') {
-      return pathname === '/dashboard';
+    if (path === '/dashboard' || path === '/dashboard/insurer') {
+      return pathname === path;
     }
     return pathname.startsWith(path);
   };
@@ -196,17 +203,64 @@ export default function DashboardLayout({
         );
       case 'insurer':
         return (
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={getIsActive('/dashboard/insurer')}
-            >
-              <Link href="/dashboard/insurer">
-                <ShieldCheck />
-                Insurer Portal
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer')}>
+                <Link href="/dashboard/insurer">
+                  <LayoutGrid />
+                  Policy Overview
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/incoming-claims')}>
+                <Link href="/dashboard/insurer/incoming-claims">
+                  <Inbox />
+                  Incoming Claims
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/hospital-verification')}>
+                <Link href="/dashboard/insurer/hospital-verification">
+                  <Hospital />
+                  Hospital Verification
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/approved-claims')}>
+                <Link href="/dashboard/insurer/approved-claims">
+                  <ClipboardCheck />
+                  Approved Claims
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/rejected-pending-claims')}>
+                <Link href="/dashboard/insurer/rejected-pending-claims">
+                  <FileClock />
+                  Rejected / Pending
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/fraud-risk-alerts')}>
+                <Link href="/dashboard/insurer/fraud-risk-alerts">
+                  <ShieldAlert />
+                  Fraud / Risk Alerts
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/reports')}>
+                <Link href="/dashboard/insurer/reports">
+                  <BarChart />
+                  Reports & Analytics
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </>
         );
       default:
         return null;
