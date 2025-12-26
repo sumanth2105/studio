@@ -13,6 +13,9 @@ import {
   History,
   TrendingUp,
   UploadCloud,
+  FileText,
+  BadgePercent,
+  CalendarClock,
 } from 'lucide-react';
 import { mockHolder } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
@@ -25,23 +28,28 @@ export default function TrustScorePage() {
 
   const scoreFactors = [
     {
-      icon: <History className="h-6 w-6 text-primary" />,
-      title: 'Payment Regularity',
+      icon: <CalendarClock className="h-6 w-6 text-primary" />,
+      title: 'Payment Regularity (40%)',
       description:
-        'Consistent and on-time premium payments build a strong foundation.',
+        'Consistent and on-time premium payments are the single most important factor. A strong payment history demonstrates reliability.',
     },
     {
       icon: <FileCheck className="h-6 w-6 text-primary" />,
-      title: 'Claim History',
+      title: 'Claim History (30%)',
       description:
-        'A history of legitimate and well-documented claims contributes positively.',
+        'A history of well-documented, legitimate claims builds trust. Frequent, small, or poorly documented claims may lower the score.',
     },
     {
-      icon: <UploadCloud className="h-6 w-6 text-primary" />,
-      title: 'Document Completeness',
+      icon: <FileText className="h-6 w-6 text-primary" />,
+      title: 'Document Completeness (20%)',
       description:
-        'Keeping your KYC and policy documents up-to-date is crucial.',
+        'Having all your KYC, policy, and personal information complete and up-to-date is crucial for quick verification.',
     },
+    {
+        icon: <BadgePercent className="h-6 w-6 text-primary" />,
+        title: 'Policy Age & History (10%)',
+        description: 'Long-standing, active policies with a good history contribute positively to your score over time.',
+    }
   ];
 
   const improvementTips = [
@@ -74,22 +82,25 @@ export default function TrustScorePage() {
           <CardTitle>Your Trust Score</CardTitle>
           <CardDescription>
             Your trust score is a dynamic rating that enables faster,
-            pre-approved access to healthcare.
+            pre-approved access to healthcare. A higher score unlocks instant approvals for treatments.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-1 flex flex-col items-center justify-center p-6 bg-card-foreground/5 rounded-lg">
+        <CardContent>
+          <div className="flex flex-col items-center justify-center p-6 bg-card-foreground/5 rounded-lg">
             <TrustScoreGauge score={trustScore} />
-            <p className="text-sm text-muted-foreground mt-4 text-center">
-              A higher score unlocks instant approvals for treatments.
-            </p>
           </div>
-          <div className="md:col-span-2 space-y-6">
-            <h3 className="text-lg font-semibold">
-              How is your Trust Score calculated?
-            </h3>
-            <div className="space-y-4">
-              {scoreFactors.map((factor, index) => (
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+            <CardTitle>Detailed Breakdown</CardTitle>
+            <CardDescription>
+                Your Trust Score is calculated based on several key factors. Here’s how they are weighted to determine your score.
+            </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+             {scoreFactors.map((factor, index) => (
                 <div key={index} className="flex items-start gap-4">
                   <div className="flex-shrink-0 mt-1">{factor.icon}</div>
                   <div>
@@ -100,8 +111,6 @@ export default function TrustScorePage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
         </CardContent>
       </Card>
 
