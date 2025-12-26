@@ -22,6 +22,7 @@ import type { Claim } from '@/lib/types';
 import { ClaimStatusBadge } from '@/components/dashboard/claim-status-badge';
 import { cn } from '@/lib/utils';
 import { ClaimReviewPanel } from '@/components/insurer/claim-review-panel';
+import { intervalToDuration, formatDuration } from 'date-fns';
 
 export default function IncomingClaimsPage() {
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
@@ -45,6 +46,27 @@ export default function IncomingClaimsPage() {
     if (days > 1) return 'text-yellow-600';
     return 'text-green-600';
   }
+
+  const formatSlaDuration = (submissionDate: string) => {
+    const duration = intervalToDuration({
+      start: new Date(submissionDate),
+      end: new Date(),
+    });
+
+    let formatted = '';
+    if (duration.years && duration.years > 0) formatted += `${duration.years}y `;
+    if (duration.months && duration.months > 0) formatted += `${duration.months}m `;
+    if (duration.days && duration.days > 0) formatted += `${duration.days}d `;
+    
+    if (formatted === '') {
+        const hours = Math.round((new Date().getTime() - new Date(submissionDate).getTime()) / (1000 * 60 * 60));
+        if (hours > 0) return `${hours}h ago`;
+        const minutes = Math.round((new Date().getTime() - new Date(submissionDate).getTime()) / (1000 * 60));
+        return `${minutes}m ago`;
+    }
+
+    return `${formatted.trim()} ago`;
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-8rem)]">
@@ -94,7 +116,7 @@ export default function IncomingClaimsPage() {
                         }).format(claim.claimAmount)}
                       </TableCell>
                        <TableCell className={cn("font-mono text-xs", getSlaColor(claim.submissionDate))}>
-                        {Math.round((new Date().getTime() - new Date(claim.submissionDate).getTime()) / (1000 * 60 * 60 * 24))}d ago
+                        {formatSlaDuration(claim.submissionDate)}
                       </TableCell>
                       <TableCell>
                         <ClaimStatusBadge status={claim.status} />
