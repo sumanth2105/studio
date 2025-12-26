@@ -114,7 +114,7 @@ export default function ConsentPage() {
                     <Switch
                         id="email-notifications"
                         checked={notificationConsent.email}
-                        onCheckedChange={(checked) => setNotificationCellName(prev => ({...prev, email: checked}))}
+                        onCheckedChange={(checked) => setNotificationConsent(prev => ({...prev, email: checked}))}
                     />
                 </div>
                  <div className="flex items-center justify-between p-4 border rounded-lg">
