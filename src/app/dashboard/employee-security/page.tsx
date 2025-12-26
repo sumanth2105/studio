@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -115,6 +115,11 @@ export default function EmployeeSecurityPage() {
     const { toast } = useToast();
     const [users, setUsers] = useState(mockUsers);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const handleStatusChange = (userId: string, newStatus: boolean) => {
         setUsers(users.map(user => user.id === userId ? { ...user, status: newStatus ? 'Active' : 'Disabled' } : user));
@@ -187,7 +192,7 @@ export default function EmployeeSecurityPage() {
                         <Badge variant={user.role === 'Admin' ? 'destructive' : 'secondary'}>{user.role}</Badge>
                     </TableCell>
                     <TableCell>
-                        {new Date(user.lastLogin).toLocaleString()}
+                        {isClient ? new Date(user.lastLogin).toLocaleString() : ''}
                     </TableCell>
                      <TableCell>
                         <div className="flex items-center gap-2">
@@ -240,7 +245,7 @@ export default function EmployeeSecurityPage() {
                     <TableBody>
                         {mockLogs.map(log => (
                             <TableRow key={log.id}>
-                                <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
+                                <TableCell>{isClient ? new Date(log.timestamp).toLocaleString() : ''}</TableCell>
                                 <TableCell>{log.user}</TableCell>
                                 <TableCell>{log.action}</TableCell>
                                 <TableCell className="font-mono text-xs">{log.ipAddress}</TableCell>
