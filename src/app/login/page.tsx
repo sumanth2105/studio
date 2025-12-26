@@ -50,6 +50,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
+import { sendOtp } from '@/ai/flows/send-otp';
 
 
 const signUpSchema = z.object({
@@ -85,6 +86,8 @@ export default function LoginPage() {
   const [signUpStep, setSignUpStep] = useState<'details' | 'otp' | 'success'>('details');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [demoOtp, setDemoOtp] = useState<string | null>(null);
+
 
   const signUpForm = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -114,21 +117,37 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMessage(null);
     console.log('Signing up with data:', data);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setSignUpStep('otp');
-    setIsLoading(false);
-    toast({
-        title: 'OTP Sent',
-        description: `An OTP has been sent to ${data.contactNumber}.`
-    });
+
+    try {
+      const result = await sendOtp({ to: `+91${data.contactNumber}` });
+      if (result.success) {
+        setDemoOtp(result.otp || null); // Store demo OTP
+        setSignUpStep('otp');
+        toast({
+            title: 'OTP Sent',
+            description: `An OTP has been sent to ${data.contactNumber}.`
+        });
+      } else {
+        setErrorMessage(result.message);
+      }
+    } catch (error) {
+        console.error(error);
+        setErrorMessage('An unexpected error occurred while sending the OTP.');
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   const handleOtpSubmit = async (data: OtpFormValues) => {
     setIsLoading(true);
     setErrorMessage(null);
     console.log('Verifying OTP:', data);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    if (data.otp === '123456') {
+    
+    // In a real app, you'd call a `verifyOtp` flow.
+    // For this demo, we compare with the OTP returned from the `sendOtp` flow.
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (data.otp === demoOtp) {
         setSignUpStep('success');
         toast({
             title: 'Sign Up Successful',
@@ -138,6 +157,7 @@ export default function LoginPage() {
         setSignUpStep('details');
         signUpForm.reset();
         otpForm.reset();
+        setDemoOtp(null);
     } else {
         setErrorMessage('Invalid OTP. Please try again.');
     }
@@ -169,6 +189,13 @@ export default function LoginPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 max-h-[50vh] overflow-y-auto pr-3">
+                        {errorMessage && (
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Error</AlertTitle>
+                                <AlertDescription>{errorMessage}</AlertDescription>
+                            </Alert>
+                        )}
                         <FormField
                             control={signUpForm.control}
                             name="username"
@@ -419,13 +446,15 @@ export default function LoginPage() {
                                 <AlertDescription>{errorMessage}</AlertDescription>
                             </Alert>
                         )}
+                        {demoOtp && (
                         <Alert variant="default" className="text-sm">
                             <KeyRound className="h-4 w-4" />
                             <AlertTitle>Demo Information</AlertTitle>
                             <AlertDescription>
-                                Use OTP: <strong>123456</strong>
+                                Use OTP: <strong>{demoOtp}</strong>
                             </AlertDescription>
                         </Alert>
+                        )}
                     </CardContent>
                      <CardFooter className="flex-col gap-4">
                         <Button type="submit" disabled={isLoading} className='w-full'>
