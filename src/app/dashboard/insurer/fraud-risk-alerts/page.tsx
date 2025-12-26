@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -97,6 +97,11 @@ const statusStyles: Record<AlertStatus, string> = {
 export default function FraudRiskAlertsPage() {
     const { toast } = useToast();
     const [alerts, setAlerts] = useState<FraudAlert[]>(mockAlerts);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const handleAction = (alertId: string, newStatus: AlertStatus, actionText: string) => {
         setAlerts(prevAlerts => 
@@ -136,7 +141,7 @@ export default function FraudRiskAlertsPage() {
                 {alerts.map((alert) => (
                     <TableRow key={alert.id}>
                         <TableCell className="font-mono text-xs">{alert.id}</TableCell>
-                        <TableCell>{new Date(alert.timestamp).toLocaleString()}</TableCell>
+                        <TableCell>{isClient ? new Date(alert.timestamp).toLocaleString() : ''}</TableCell>
                         <TableCell>
                             <Badge variant="outline" className={cn('font-bold', riskLevelStyles[alert.riskLevel])}>
                                 {alert.riskLevel}
