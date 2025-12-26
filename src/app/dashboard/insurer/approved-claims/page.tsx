@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -33,6 +33,12 @@ import { cn } from '@/lib/utils';
 
 export default function ApprovedClaimsPage() {
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
   const approvedClaims = mockClaims.filter(
     (c) => c.status === 'Approved' || c.status === 'Auto-Approved' || c.status === 'Settled'
   );
@@ -48,7 +54,8 @@ export default function ApprovedClaimsPage() {
   };
   
   const getApprovalTimestamp = (claim: Claim) => {
-      const approvalEvent = claim.timeline.find(t => t.status === 'Approved' || t.status === 'Auto-Approved');
+      if (!isClient) return '';
+      const approvalEvent = claim.timeline.find(t => t.status === 'Approved' || t.status === 'Auto-approved');
       return approvalEvent ? new Date(approvalEvent.timestamp).toLocaleString() : 'N/A';
   }
 
