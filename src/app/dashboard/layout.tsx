@@ -12,6 +12,11 @@ import {
   UploadCloud,
   LogOut,
   Heart,
+  FileSearch,
+  FilePlus,
+  History,
+  Users,
+  Building,
 } from 'lucide-react';
 
 import {
@@ -138,17 +143,56 @@ export default function DashboardLayout({
         );
       case 'hospital':
         return (
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={getIsActive('/dashboard/hospital')}
-            >
-              <Link href="/dashboard/hospital">
-                <Hospital />
-                Hospital Portal
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/hospital-profile')}>
+                <Link href="/dashboard/hospital-profile">
+                  <Building />
+                  Hospital Profile
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/verify-patient')}>
+                <Link href="/dashboard/verify-patient">
+                  <FileSearch />
+                  Verify Patient
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/new-claim')}>
+                <Link href="/dashboard/new-claim">
+                  <FilePlus />
+                  New Claim
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/claim-status')}>
+                <Link href="/dashboard/claim-status">
+                  <ShieldCheck />
+                  Claim Status
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/claim-history')}>
+                <Link href="/dashboard/claim-history">
+                  <History />
+                  Claim History
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/employee-security')}>
+                <Link href="/dashboard/employee-security">
+                  <Users />
+                  Employee & Security
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </>
         );
       case 'insurer':
         return (
