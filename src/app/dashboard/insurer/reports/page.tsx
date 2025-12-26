@@ -126,7 +126,7 @@ export default function ReportsAndAnalyticsPage() {
             <CardContent>
                 <div className="text-2xl font-bold">1.8%</div>
                  <p className="text-xs text-muted-foreground">-0.3% from last month</p>
-            </C>
+            </CardContent>
         </Card>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
