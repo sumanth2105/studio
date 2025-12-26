@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import Link from 'next/link';
@@ -46,8 +47,8 @@ export default function DashboardLayout({
   }, []);
 
   const getIsActive = (path: string) => {
-    if (path === '/dashboard' || path === '/dashboard/profile') {
-        return pathname === '/dashboard' || pathname === '/dashboard/profile';
+    if (path === '/dashboard') {
+        return pathname === '/dashboard';
     }
     return pathname.startsWith(path);
   }
@@ -60,8 +61,8 @@ export default function DashboardLayout({
         return (
           <>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/profile')}>
-                <Link href="/dashboard/profile">
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard')}>
+                <Link href="/dashboard">
                   <User />
                   Profile
                 </Link>
