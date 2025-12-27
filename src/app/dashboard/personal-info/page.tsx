@@ -40,9 +40,9 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { mockHolder } from '@/lib/data';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useAuth } from '@/firebase';
 import { setUserProfile } from '@/firebase/firestore/users';
-import { signInAnonymously, getAuth } from 'firebase/auth';
+import { signInAnonymously } from 'firebase/auth';
 
 
 const personalInfoSchema = z.object({
@@ -142,7 +142,7 @@ const getInitialFormValues = (): PersonalInfoFormValues => {
             email: userData.email || defaults.email,
             address: userData.address || defaults.address,
             aadhaar: userData.aadhaar || defaults.aadhaar,
-            pan: userData.pan || defaults.pan,
+            pan: userData.pan || '',
             policyHolderName: userData.fullName || defaults.patientName,
             policyHolderContact: userData.contactNumber || defaults.contactNumber,
             accountHolderName: userData.fullName || defaults.patientName,
@@ -156,6 +156,7 @@ export default function PersonalInfoPage() {
   const { toast } = useToast();
   const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<PersonalInfoFormValues>({
@@ -165,11 +166,12 @@ export default function PersonalInfoPage() {
   });
 
    useEffect(() => {
-    const auth = getAuth();
-    if (!auth.currentUser) {
-      signInAnonymously(auth);
+    if (auth && !auth.currentUser) {
+      signInAnonymously(auth).catch((error) => {
+        console.error("Anonymous sign-in failed:", error);
+      });
     }
-  }, []);
+  }, [auth]);
 
    useEffect(() => {
     const values = getInitialFormValues();
@@ -747,3 +749,5 @@ export default function PersonalInfoPage() {
     </Card>
   );
 }
+
+    
