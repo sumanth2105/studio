@@ -4,6 +4,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -43,9 +44,9 @@ import { mockHolder } from '@/lib/data';
 const personalInfoSchema = z.object({
   // Patient Details
   patientName: z.string().min(1, 'Full name is required'),
-  age: z.coerce.number().min(0, 'Age must be a positive number'),
-  gender: z.enum(['male', 'female', 'other']),
-  dob: z.date({ required_error: 'Date of birth is required' }),
+  age: z.coerce.number().min(0, 'Age must be a positive number').optional(),
+  gender: z.enum(['male', 'female', 'other']).optional(),
+  dob: z.date({ required_error: 'Date of birth is required' }).optional(),
   contactNumber: z.string().min(10, 'Must be a valid 10-digit number'),
   email: z.string().email('Invalid email address'),
   address: z.string().min(1, 'Residential address is required'),
@@ -78,41 +79,88 @@ const personalInfoSchema = z.object({
 
 type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
 
+const getInitialFormValues = (): Partial<PersonalInfoFormValues> => {
+    if (typeof window === 'undefined') {
+        return {};
+    }
+    
+    const storedData = localStorage.getItem('registeredUserData');
+    const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
+
+    if (storedData) {
+        const userData = JSON.parse(storedData);
+        return {
+            patientName: userData.fullName || '',
+            contactNumber: userData.contactNumber || '',
+            age: userData.age ? Number(userData.age) : undefined,
+            gender: userData.gender || undefined,
+            dob: userData.dob ? new Date(userData.dob) : undefined,
+            email: userData.email || '',
+            address: userData.address || '',
+            aadhaar: userData.aadhaar || '',
+            pan: userData.pan || '',
+
+            // Default policy details as they are not in sign up
+            policyHolderName: userData.fullName || '',
+            relationship: 'Self',
+            policyHolderContact: userData.contactNumber || '',
+            insuranceCompany: activePolicy?.provider || '',
+            policyNumber: activePolicy?.policyNumber || '',
+            policyType: 'family_floater',
+            sumInsured: activePolicy?.coverage || 0,
+            remainingSum: activePolicy?.coverage || 0,
+            claimType: 'cashless',
+            policyStartDate: new Date('2023-01-01'),
+            policyEndDate: new Date('2024-01-01'),
+            accountHolderName: userData.fullName || '',
+            bankName: 'National Bank of India',
+            accountNumber: '',
+            ifscCode: '',
+            branchName: '',
+        };
+    }
+
+    return {
+        // Leave everything blank if no signed up user
+        patientName: '',
+        contactNumber: '',
+        email: '',
+        address: '',
+        aadhaar: '',
+        pan: '',
+        policyHolderName: '',
+        relationship: '',
+        policyHolderContact: '',
+        insuranceCompany: '',
+        policyNumber: '',
+        sumInsured: 0,
+        remainingSum: 0,
+        accountHolderName: '',
+        bankName: '',
+        accountNumber: '',
+        ifscCode: '',
+        branchName: '',
+    };
+};
+
 export default function PersonalInfoPage() {
   const { toast } = useToast();
-  const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
+  const [initialValues, setInitialValues] = useState<Partial<PersonalInfoFormValues>>({});
+
+  useEffect(() => {
+    setInitialValues(getInitialFormValues());
+  }, []);
   
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
-    defaultValues: {
-      patientName: mockHolder.name,
-      contactNumber: mockHolder.mobile,
-      // Defaulting some values as they are not in mockHolder
-      age: 35,
-      gender: 'female',
-      dob: new Date('1989-01-01'),
-      email: 'holder@example.com',
-      address: '123, Main Street, Anytown, India',
-      aadhaar: `12345678${mockHolder.aadhaarLast4}`,
-      pan: 'ABCDE1234F',
-      policyHolderName: mockHolder.name,
-      relationship: 'Self',
-      policyHolderContact: mockHolder.mobile,
-      insuranceCompany: activePolicy?.provider,
-      policyNumber: activePolicy?.policyNumber,
-      policyType: 'family_floater',
-      sumInsured: activePolicy?.coverage,
-      remainingSum: activePolicy?.coverage,
-      claimType: 'cashless',
-      policyStartDate: new Date('2023-01-01'),
-      policyEndDate: new Date('2024-01-01'),
-      accountHolderName: mockHolder.name,
-      bankName: 'National Bank of India',
-      accountNumber: '12345678901',
-      ifscCode: 'NBIN0001234',
-      branchName: 'Anytown Branch',
-    }
+    values: initialValues as PersonalInfoFormValues,
+    mode: 'onBlur'
   });
+
+   useEffect(() => {
+    form.reset(initialValues as PersonalInfoFormValues);
+  }, [initialValues, form]);
+
 
   function onSubmit(data: PersonalInfoFormValues) {
     console.log(data);
@@ -169,7 +217,7 @@ export default function PersonalInfoPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Gender</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select gender" />
@@ -371,7 +419,7 @@ export default function PersonalInfoPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Policy Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select policy type" />
@@ -494,7 +542,7 @@ export default function PersonalInfoPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Claim Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select claim type" />
@@ -642,3 +690,5 @@ export default function PersonalInfoPage() {
     </Card>
   );
 }
+
+    

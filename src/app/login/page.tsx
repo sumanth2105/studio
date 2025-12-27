@@ -86,6 +86,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [demoOtp, setDemoOtp] = useState<string | null>(null);
+  const [signUpData, setSignUpData] = useState<SignUpFormValues | null>(null);
 
 
   const signUpForm = useForm<SignUpFormValues>({
@@ -126,6 +127,7 @@ export default function LoginPage() {
   const handleSignUpSubmit = async (data: SignUpFormValues) => {
     setIsLoading(true);
     setErrorMessage(null);
+    setSignUpData(data);
     console.log('Signing up with data:', data);
 
     // Simulate sending OTP and show it for demo
@@ -151,6 +153,11 @@ export default function LoginPage() {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     if (data.otp === demoOtp) {
+        if (signUpData) {
+            const { password, confirmPassword, ...userDataToStore } = signUpData;
+            localStorage.setItem('registeredUserData', JSON.stringify(userDataToStore));
+        }
+
         setSignUpStep('success');
         toast({
             title: 'Sign Up Successful',
@@ -613,3 +620,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
