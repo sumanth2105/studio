@@ -290,7 +290,8 @@ export default function DashboardLayout({
         <SidebarFooter className="p-4">
           <Button variant="outline" asChild>
             <Link href="/login">
-              <LogOut className="mr-2" /> Switch Role
+              <LogOut className="mr-2" />
+              Log out
             </Link>
           </Button>
         </SidebarFooter>
