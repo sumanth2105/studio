@@ -35,11 +35,13 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Upload } from 'lucide-react';
+import { CalendarIcon, Upload, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { mockHolder } from '@/lib/data';
+import { useAuth, useFirestore } from '@/firebase';
+import { setUserProfile } from '@/firebase/firestore/users';
 
 const personalInfoSchema = z.object({
   // Patient Details
@@ -149,29 +151,50 @@ const getInitialFormValues = (): Partial<PersonalInfoFormValues> => {
 
 export default function PersonalInfoPage() {
   const { toast } = useToast();
-  // Initialize state with default values to prevent uncontrolled -> controlled error
+  const { user } = useAuth();
+  const firestore = useFirestore();
   const [initialValues, setInitialValues] = useState<Partial<PersonalInfoFormValues>>(defaultInitialValues);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // getInitialFormValues now depends on localStorage, so it should only run on the client.
     setInitialValues(getInitialFormValues());
   }, []);
   
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
-    values: initialValues as PersonalInfoFormValues, // Use the state that has default values
+    values: initialValues as PersonalInfoFormValues,
     mode: 'onBlur'
   });
 
    useEffect(() => {
-    // Reset the form whenever initialValues changes. This is key to populating the form
-    // after the client-side data is loaded.
     form.reset(initialValues as PersonalInfoFormValues);
   }, [initialValues, form]);
 
 
-  function onSubmit(data: PersonalInfoFormValues) {
-    console.log(data);
+  async function onSubmit(data: PersonalInfoFormValues) {
+    if (!user || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must be logged in to save your information.',
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    // Convert dates to string format for Firestore
+    const dataToSave = {
+      ...data,
+      dob: data.dob ? format(data.dob, 'yyyy-MM-dd') : undefined,
+      policyStartDate: data.policyStartDate ? format(data.policyStartDate, 'yyyy-MM-dd') : undefined,
+      policyEndDate: data.policyEndDate ? format(data.policyEndDate, 'yyyy-MM-dd') : undefined,
+    };
+    
+    await setUserProfile(firestore, user.uid, dataToSave);
+    
+    setIsSubmitting(false);
+
     toast({
       title: 'Information Submitted',
       description: 'Your personal information has been saved successfully.',
@@ -696,7 +719,10 @@ export default function PersonalInfoPage() {
             </div>
 
             <CardFooter className="px-0">
-              <Button type="submit">Save Information</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Information
+              </Button>
             </CardFooter>
           </form>
         </Form>

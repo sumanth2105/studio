@@ -127,6 +127,8 @@ export default function DocumentsPage() {
 
     setUploadStatus((prev) => ({ ...prev, [docId]: 'uploading' }));
 
+    // In a real app, you would upload the file to a storage service (like Firebase Storage)
+    // and then save the URL to Firestore. Here we'll just simulate it.
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const isSuccess = Math.random() > 0.1;
@@ -137,6 +139,8 @@ export default function DocumentsPage() {
         title: 'Upload Successful',
         description: `${documentList.find(d => d.id === docId)?.name} has been uploaded.`,
       });
+      // Here you would call a function to save the document metadata to Firestore.
+      // e.g., await saveDocumentToFirestore({ userId: 'currentUserId', name: file.name, type: docId, url: 'storage_url' });
     } else {
       setUploadStatus((prev) => ({ ...prev, [docId]: 'error' }));
       toast({
@@ -159,6 +163,7 @@ export default function DocumentsPage() {
                 title: 'Declaration Submitted',
                 description: 'Your self-declaration has been recorded.',
             });
+            // Here you would save the declaration consent to Firestore.
         } else {
             setUploadStatus((prev) => ({ ...prev, self_declaration: 'error' }));
             toast({
@@ -293,3 +298,5 @@ export default function DocumentsPage() {
     </Card>
   );
 }
+
+    
