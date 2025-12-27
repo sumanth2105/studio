@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { mockClaims, mockHolder, mockHospital } from '@/lib/data';
 import type { Claim } from '@/lib/types';
-import { Download, IndianRupee, MoreHorizontal } from 'lucide-react';
+import { Download, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,7 +124,7 @@ export default function ApprovedClaimsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleInitiateSettlement(claim.id)} disabled={getSettlementStatus(claim) === 'Settled'}>
-                            <IndianRupee className="mr-2 h-4 w-4" />
+                            <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 8.5a2.5 2.5 0 0 0-5 0V12h5v-3.5Z"/><path d="M8 12v3.5a2.5 2.5 0 1 0 5 0V12H8Z"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="m2 12 h2"/><path d="m20 12 h2"/><path d="m4.9 19.1 1.4-1.4"/><path d="m17.7 6.3 1.4-1.4"/></svg>
                             Initiate Settlement
                           </DropdownMenuItem>
                           <DropdownMenuItem>

@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { mockClaims, mockHolder, mockHospital } from '@/lib/data';
 import { ClaimStatusBadge } from '@/components/dashboard/claim-status-badge';
-import { ClaimExplanation } from '@/components/dashboard/claim--explanation';
+import { ClaimExplanation } from '@/components/dashboard/claim-explanation';
 import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
