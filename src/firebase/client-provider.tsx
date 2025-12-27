@@ -1,9 +1,9 @@
 'use client';
 
 import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Auth, getAuth } from 'firebase/auth';
+import { Auth, getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { Firestore, getFirestore }from 'firebase/firestore';
-import { ReactNode, createContext, useContext } from 'react';
+import { ReactNode, useEffect } from 'react';
 
 import { FirebaseProvider } from './provider';
 
@@ -25,6 +25,14 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
     firestore = getFirestore(firebaseApp);
     auth = getAuth(firebaseApp);
   }
+
+  useEffect(() => {
+    if (auth && !auth.currentUser) {
+      signInAnonymously(auth).catch((error) => {
+        console.error("Anonymous sign-in failed on startup:", error);
+      });
+    }
+  }, []);
 
   return (
     <FirebaseProvider

@@ -40,9 +40,8 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { mockHolder } from '@/lib/data';
-import { useUser, useFirestore, useAuth } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { setUserProfile } from '@/firebase/firestore/users';
-import { signInAnonymously } from 'firebase/auth';
 
 
 const personalInfoSchema = z.object({
@@ -116,7 +115,6 @@ const defaultInitialValues: PersonalInfoFormValues = {
 
 
 const getInitialFormValues = (): PersonalInfoFormValues => {
-    // This function will now only be called on the client side
     const storedData = localStorage.getItem('registeredUserData');
     const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
 
@@ -157,47 +155,34 @@ export default function PersonalInfoPage() {
   const { toast } = useToast();
   const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
-  const auth = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
-    defaultValues: defaultInitialValues, // Initialize with safe defaults
+    defaultValues: defaultInitialValues,
     mode: 'onBlur'
   });
 
    useEffect(() => {
-    if (auth && !auth.currentUser) {
-      signInAnonymously(auth).catch((error) => {
-        console.error("Anonymous sign-in failed:", error);
-      });
-    }
-  }, [auth]);
-
-   useEffect(() => {
-    // We access localStorage and reset the form only on the client side
     const values = getInitialFormValues();
     form.reset(values);
   }, [form]);
 
 
   async function onSubmit(data: PersonalInfoFormValues) {
-    if (isUserLoading) {
-        // Should not happen as button is disabled, but as a safeguard
-        return;
-    }
     if (!user || !firestore) {
+      // This case should ideally not happen anymore with anonymous auth at root
+      // But as a fallback, we show a generic error.
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'You must be logged in to save your information.',
+        description: 'Could not connect to the database. Please try again later.',
       });
       return;
     }
     
     setIsSubmitting(true);
     
-    // Convert dates to string format for Firestore
     const dataToSave = {
       ...data,
       dob: data.dob ? format(data.dob, 'yyyy-MM-dd') : undefined,
@@ -751,5 +736,3 @@ export default function PersonalInfoPage() {
     </Card>
   );
 }
-
-    
