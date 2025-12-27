@@ -187,6 +187,16 @@ export default function DocumentsPage() {
         return docId === 'self_declaration' ? <FileText className="h-5 w-5 text-muted-foreground" /> : <Paperclip className="h-5 w-5 text-muted-foreground" />;
     }
   };
+  
+  const getSelectButtonText = (docId: DocumentType) => {
+    if (uploadStatus[docId] === 'uploaded') {
+        return 'Update File';
+    }
+    if (files[docId]) {
+        return 'Change File';
+    }
+    return 'Select File';
+  }
 
   return (
     <Card>
@@ -274,7 +284,7 @@ export default function DocumentsPage() {
                   />
                   <Button asChild variant="outline" className="flex-1">
                     <label htmlFor={doc.id} className='cursor-pointer'>
-                      {files[doc.id] ? 'Change File' : 'Select File'}
+                      {getSelectButtonText(doc.id)}
                     </label>
                   </Button>
                   <Button
