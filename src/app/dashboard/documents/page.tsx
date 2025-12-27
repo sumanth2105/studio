@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -109,6 +109,12 @@ export default function DocumentsPage() {
     self_declaration: 'idle',
   });
   const [declarationConsent, setDeclarationConsent] = useState(false);
+  const [currentDate, setCurrentDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCurrentDate(new Date().toLocaleDateString());
+  }, []);
+
 
   const handleFileChange = (
     docId: DocumentType,
@@ -220,7 +226,7 @@ export default function DocumentsPage() {
                         <ScrollArea className="h-48 w-full rounded-md border bg-muted/50 p-4">
                             <div className="space-y-3 text-sm text-muted-foreground">
                                 {selfDeclarationText.map((text, i) => <p key={i}>{text}</p>)}
-                                <p className="font-medium pt-2">Date: {new Date().toLocaleDateString()}</p>
+                                {currentDate && <p className="font-medium pt-2">Date: {currentDate}</p>}
                             </div>
                         </ScrollArea>
                         
@@ -247,7 +253,7 @@ export default function DocumentsPage() {
                                 </>
                              ) : (
                                  <p className="text-sm text-green-600 font-medium mt-2">
-                                    Declaration submitted on {new Date().toLocaleString()}.
+                                    Declaration submitted on {currentDate}.
                                 </p>
                              )}
 
@@ -308,5 +314,3 @@ export default function DocumentsPage() {
     </Card>
   );
 }
-
-    
