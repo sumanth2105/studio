@@ -38,6 +38,7 @@ import { CalendarIcon, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { mockHolder } from '@/lib/data';
 
 const personalInfoSchema = z.object({
   // Patient Details
@@ -79,8 +80,38 @@ type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
 
 export default function PersonalInfoPage() {
   const { toast } = useToast();
+  const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
+  
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
+    defaultValues: {
+      patientName: mockHolder.name,
+      contactNumber: mockHolder.mobile,
+      // Defaulting some values as they are not in mockHolder
+      age: 35,
+      gender: 'female',
+      dob: new Date('1989-01-01'),
+      email: 'holder@example.com',
+      address: '123, Main Street, Anytown, India',
+      aadhaar: `12345678${mockHolder.aadhaarLast4}`,
+      pan: 'ABCDE1234F',
+      policyHolderName: mockHolder.name,
+      relationship: 'Self',
+      policyHolderContact: mockHolder.mobile,
+      insuranceCompany: activePolicy?.provider,
+      policyNumber: activePolicy?.policyNumber,
+      policyType: 'family_floater',
+      sumInsured: activePolicy?.coverage,
+      remainingSum: activePolicy?.coverage,
+      claimType: 'cashless',
+      policyStartDate: new Date('2023-01-01'),
+      policyEndDate: new Date('2024-01-01'),
+      accountHolderName: mockHolder.name,
+      bankName: 'National Bank of India',
+      accountNumber: '12345678901',
+      ifscCode: 'NBIN0001234',
+      branchName: 'Anytown Branch',
+    }
   });
 
   function onSubmit(data: PersonalInfoFormValues) {
