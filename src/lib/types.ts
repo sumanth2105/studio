@@ -16,6 +16,8 @@ export interface Policy {
   policyNumber: string;
   status: 'Active' | 'Inactive';
   coverage: number;
+  startDate: string;
+  endDate: string;
 }
 
 export interface ClaimTimelineEvent {
@@ -68,6 +70,26 @@ export interface HealthRecord {
     recentVisits: { id: string; date: string; doctor: string; reason: string; hospital: string }[];
 }
 
+export interface VerificationStatus {
+    aadhaar: boolean;
+    pan: boolean;
+    mobile: boolean;
+    policyDocument: boolean;
+    bankProof: boolean;
+}
+
+export interface PaymentHistory {
+    onTimeRatio: number; // e.g., 0.95 for 95%
+    missedPayments: number;
+    consistencyDuration: number; // in months
+}
+
+export interface FraudIndicators {
+    pastFraudAlerts: boolean;
+    activeInvestigation: boolean;
+    misrepresentationFlags: boolean;
+}
+
 export interface Holder extends User {
   role: 'holder';
   trustScore: number;
@@ -77,6 +99,9 @@ export interface Holder extends User {
     mobile: string;
   };
   healthRecords?: HealthRecord;
+  verification: VerificationStatus;
+  paymentHistory: PaymentHistory;
+  fraudIndicators: FraudIndicators;
 }
 
 export interface HospitalDocument {
@@ -110,7 +135,7 @@ export interface Insurer extends User {
   role: 'insurer';
 }
 
-export type VerificationStatus =
+export type VerificationRequestStatus =
   | 'Pending Verification'
   | 'Additional Documents Required'
   | 'Verified'
@@ -121,7 +146,7 @@ export interface VerificationRequest {
   name: string;
   registrationId: string;
   dateOfRequest: string;
-  status: VerificationStatus;
+  status: VerificationRequestStatus;
   claimsCount: number;
   disputeRatio: number;
   trustScore: number;

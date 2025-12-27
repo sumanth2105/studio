@@ -14,10 +14,27 @@ export const mockHolder: Holder = {
   aadhaarLast4: '1234',
   avatarUrl: '',
   role: 'holder',
-  trustScore: 85,
+  trustScore: 85, // This will be recalculated dynamically
   emergencyNominee: {
     name: 'Priya Sharma',
     mobile: '98XXXXXX02',
+  },
+  verification: {
+    aadhaar: true,
+    pan: true,
+    mobile: true,
+    policyDocument: true,
+    bankProof: true,
+  },
+  paymentHistory: {
+    onTimeRatio: 0.98, // 98%
+    missedPayments: 1,
+    consistencyDuration: 36, // 3 years
+  },
+  fraudIndicators: {
+    pastFraudAlerts: false,
+    activeInvestigation: false,
+    misrepresentationFlags: false,
   },
   policies: [
     {
@@ -26,6 +43,8 @@ export const mockHolder: Holder = {
       policyNumber: 'HS-987654321',
       status: 'Active',
       coverage: 500000,
+      startDate: '2021-01-01',
+      endDate: '2024-12-31',
     },
     {
       id: 'policy-02',
@@ -33,6 +52,8 @@ export const mockHolder: Holder = {
       policyNumber: 'LG-112233445',
       status: 'Inactive',
       coverage: 1000000,
+      startDate: '2020-06-01',
+      endDate: '2023-05-31',
     },
   ],
   healthRecords: {
