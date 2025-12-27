@@ -89,7 +89,7 @@ export default function ClaimHistoryPage() {
 
   const allStatuses: ClaimStatus[] = [
     'Pending',
-    'Auto-Approved',
+    'Insurance Claim Guaranteed',
     'Manual Review',
     'Approved',
     'Rejected',

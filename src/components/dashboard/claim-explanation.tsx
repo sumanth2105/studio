@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -33,7 +34,7 @@ export function ClaimExplanation({ claim, holder, hospital }: ClaimExplanationPr
         claimAmount: claim.claimAmount,
         safetyCap: 100000, // Mock safety cap
         fraudFlags: claim.status === 'Manual Review',
-        autoApprove: claim.status === 'Auto-Approved',
+        autoApprove: claim.status === 'Insurance Claim Guaranteed',
         medicalDocuments: claim.documents.map(d => d.name).join(', '),
         bills: `Total amount: ${claim.claimAmount}`,
         doctorNotes: claim.doctorNotes,

@@ -43,12 +43,12 @@ function ApprovedClaimsTab() {
   }, []);
 
   const approvedClaims = mockClaims.filter(
-    (c) => c.status === 'Approved' || c.status === 'Auto-Approved' || c.status === 'Settled'
+    (c) => c.status === 'Approved' || c.status === 'Insurance Claim Guaranteed' || c.status === 'Settled'
   );
 
   const getApprovalType = (claim: Claim) => {
-    return claim.timeline.some((t) => t.status === 'Auto-Approved')
-      ? 'Auto-Approved'
+    return claim.timeline.some((t) => t.status === 'Insurance Claim Guaranteed')
+      ? 'Guaranteed'
       : 'Manual';
   };
 
@@ -58,7 +58,7 @@ function ApprovedClaimsTab() {
 
   const getApprovalTimestamp = (claim: Claim) => {
     if (!isClient) return '';
-    const approvalEvent = claim.timeline.find(t => t.status === 'Approved' || t.status === 'Auto-approved');
+    const approvalEvent = claim.timeline.find(t => t.status === 'Approved' || t.status === 'Insurance Claim Guaranteed');
     return approvalEvent ? new Date(approvalEvent.timestamp).toLocaleString() : 'N/A';
   }
 
@@ -97,7 +97,7 @@ function ApprovedClaimsTab() {
                 }).format(claim.claimAmount)}
               </TableCell>
               <TableCell>
-                <Badge variant={getApprovalType(claim) === 'Auto-Approved' ? 'default' : 'secondary'}>
+                <Badge variant={getApprovalType(claim) === 'Guaranteed' ? 'default' : 'secondary'}>
                   {getApprovalType(claim)}
                 </Badge>
               </TableCell>

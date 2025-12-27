@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -56,7 +57,7 @@ const prompt = ai.definePrompt({
   name: 'explainClaimDecisionPrompt',
   input: {schema: ExplainClaimDecisionInputSchema},
   output: {schema: ExplainClaimDecisionOutputSchema},
-  prompt: `You are an AI assistant that generates explanations for insurance claim decisions.
+  prompt: `You are an AI assistant that generates explanations for insurance claim decisions. The "auto-approve" status is now called "Insurance Claim Guaranteed".
 
   Based on the following information, explain why the claim was approved or rejected. Be concise and easy to understand.  Include key factors that influenced the decision.
 
@@ -66,7 +67,7 @@ const prompt = ai.definePrompt({
   Claim Amount: {{{claimAmount}}}
   Safety Cap: {{{safetyCap}}}
   Fraud Flags: {{{fraudFlags}}}
-  Auto Approve: {{{autoApprove}}}
+  Insurance Claim Guaranteed: {{{autoApprove}}}
   Medical Documents: {{{medicalDocuments}}}
   Bills: {{{bills}}}
   Doctor Notes: {{{doctorNotes}}}

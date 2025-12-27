@@ -30,7 +30,7 @@ export interface ClaimTimelineEvent {
 
 export type ClaimStatus =
   | 'Pending'
-  | 'Auto-Approved'
+  | 'Insurance Claim Guaranteed'
   | 'Manual Review'
   | 'Approved'
   | 'Rejected'

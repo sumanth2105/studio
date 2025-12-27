@@ -71,7 +71,7 @@ export default function ClaimReviewPage({ params }: { params: { id: string } }) 
   const { toast } = useToast();
   const claim = mockClaims.find((c) => c.id === params.id);
 
-  if (!claim || !['Manual Review', 'Auto-Approved'].includes(claim.status)) {
+  if (!claim || !['Manual Review', 'Insurance Claim Guaranteed'].includes(claim.status)) {
     notFound();
   }
 
@@ -80,8 +80,8 @@ export default function ClaimReviewPage({ params }: { params: { id: string } }) 
   const policy = holder.policies.find((p) => p.id === claim.policyId);
 
   const claimType =
-    claim.status === 'Auto-Approved'
-      ? 'Emergency Auto-Approved'
+    claim.status === 'Insurance Claim Guaranteed'
+      ? 'Emergency Guaranteed Claim'
       : 'Manual Review';
 
   const handleDecision = (decision: 'Approved' | 'Rejected' | 'Pending') => {
@@ -135,15 +135,15 @@ export default function ClaimReviewPage({ params }: { params: { id: string } }) 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* 4. Auto-Approval Explanation (If Applicable) */}
-          {claim.status === 'Auto-Approved' && (
+          {claim.status === 'Insurance Claim Guaranteed' && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Lightbulb className="text-primary" />
-                  Auto-Approval Explanation
+                  Guaranteed Claim Explanation
                 </CardTitle>
                 <CardDescription>
-                  This claim was automatically approved by the system.
+                  This claim was automatically guaranteed by the system.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -155,7 +155,7 @@ export default function ClaimReviewPage({ params }: { params: { id: string } }) 
               </CardContent>
               <CardFooter className="gap-2">
                 <Button>
-                  <CheckCircle className="mr-2" /> Verify Auto-Approval
+                  <CheckCircle className="mr-2" /> Verify Guaranteed Approval
                 </Button>
                 <Button variant="outline">
                   <AlertTriangle className="mr-2" /> Move to Manual Investigation

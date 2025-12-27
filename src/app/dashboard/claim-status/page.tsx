@@ -19,7 +19,7 @@ const getTimelineIcon = (status: string) => {
       case 'Submitted':
       case 'Manual Review':
         return <Hourglass className="h-5 w-5 text-blue-500" />;
-      case 'Auto-Approved':
+      case 'Insurance Claim Guaranteed':
       case 'Approved':
       case 'Settled':
         return <CheckCircle className="h-5 w-5 text-green-500" />;

@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -43,7 +44,7 @@ export default function ClaimDetailPage({ params }: { params: { id: string } }) 
     switch (status) {
       case 'Submitted':
         return <FileText className="h-5 w-5 text-muted-foreground" />;
-      case 'Auto-Approved':
+      case 'Insurance Claim Guaranteed':
       case 'Approved':
       case 'Settled':
         return <CheckCircle className="h-5 w-5 text-green-500" />;

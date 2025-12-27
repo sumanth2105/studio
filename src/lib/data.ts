@@ -150,7 +150,7 @@ export const mockClaims: Claim[] = [
       {
         id: 't1-2',
         timestamp: '2023-10-26T10:01:00Z',
-        status: 'Auto-Approved',
+        status: 'Insurance Claim Guaranteed',
         description:
           'Claim auto-approved based on high trust scores and policy validity.',
       },
@@ -242,7 +242,7 @@ export const mockClaims: Claim[] = [
       {
         id: 't3-2',
         timestamp: '2023-08-02T18:05:00Z',
-        status: 'Auto-Approved',
+        status: 'Insurance Claim Guaranteed',
         description: 'Claim auto-approved.',
       },
       {

@@ -31,7 +31,7 @@ export default function IncomingClaimsPage() {
 
   // Filter for claims that need manual review or are auto-approved
   const incomingClaims = mockClaims.filter(
-    (c) => c.status === 'Manual Review' || c.status === 'Auto-Approved'
+    (c) => c.status === 'Manual Review' || c.status === 'Insurance Claim Guaranteed'
   );
 
   const handleSelectClaim = (claim: Claim) => {
