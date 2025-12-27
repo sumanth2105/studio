@@ -14,7 +14,7 @@ export const mockHolder: Holder = {
   aadhaarLast4: '1234',
   avatarUrl: '',
   role: 'holder',
-  trustScore: 85, // This will be recalculated dynamically
+  trustScore: 85,
   emergencyNominee: {
     name: 'Priya Sharma',
     mobile: '98XXXXXX02',
