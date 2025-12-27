@@ -1,3 +1,4 @@
+
 'use client';
 
 import { FirebaseApp, initializeApp } from 'firebase/app';
@@ -14,13 +15,23 @@ let auth: Auth | null = null;
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
   if (!firebaseApp) {
     const firebaseConfig = {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+      apiKey: "YOUR_API_KEY",
+      authDomain: "insure-trust-aiv2-dev.firebaseapp.com",
+      projectId: "insure-trust-aiv2-dev",
+      storageBucket: "insure-trust-aiv2-dev.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:1234567890abcdef"
     };
+    
+    // Simple check to see if the placeholder values have been replaced.
+    // In a real production environment, you would use a more robust system.
+    if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+        console.error("Firebase config is not set. Please replace placeholder values in src/firebase/client-provider.tsx");
+        // We can render children without Firebase to avoid a hard crash,
+        // though Firebase features will not work.
+        return <>{children}</>;
+    }
+    
     firebaseApp = initializeApp(firebaseConfig);
     firestore = getFirestore(firebaseApp);
     auth = getAuth(firebaseApp);
