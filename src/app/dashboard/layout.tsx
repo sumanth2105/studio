@@ -303,7 +303,7 @@ export default function DashboardLayout({
       </Sidebar>
       <SidebarInset>
         <Header />
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="p-4 sm:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
