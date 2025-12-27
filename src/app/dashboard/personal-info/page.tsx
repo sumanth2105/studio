@@ -43,7 +43,7 @@ const personalInfoSchema = z.object({
   patientName: z.string().min(1, 'Full name is required'),
   age: z.coerce.number().min(0, 'Age must be a positive number').optional(),
   gender: z.enum(['male', 'female', 'other']).optional(),
-  dob: z.coerce.date({ required_error: 'Date of birth is required' }).optional(),
+  dob: z.string().optional(),
   contactNumber: z.string().min(10, 'Must be a valid 10-digit number'),
   email: z.string().email('Invalid email address'),
   address: z.string().min(1, 'Residential address is required'),
@@ -57,9 +57,9 @@ const personalInfoSchema = z.object({
   insuranceCompany: z.string().min(1, 'Insurance company is required'),
   policyNumber: z.string().min(1, 'Policy number is required'),
   policyType: z.enum(['individual', 'family_floater']),
-  policyStartDate: z.coerce.date({ required_error: 'Policy start date is required' }),
-  policyEndDate: z.coerce.date({ required_error: 'Policy end date is required' }),
-  lastPremiumPaymentDate: z.coerce.date({ required_error: 'Last premium payment date is required' }),
+  policyStartDate: z.string().min(1, 'Policy start date is required'),
+  policyEndDate: z.string().min(1, 'Policy end date is required'),
+  lastPremiumPaymentDate: z.string().min(1, 'Last premium payment date is required'),
   sumInsured: z.coerce.number().positive('Sum insured must be positive'),
   remainingSum: z.coerce.number().positive('Remaining sum must be positive'),
   claimType: z.enum(['cashless', 'reimbursement']),
@@ -77,10 +77,16 @@ const personalInfoSchema = z.object({
 
 type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
 
-const formatDateForInput = (date?: Date): string => {
-  if (!date || isNaN(date.getTime())) return '';
+const formatDateForInput = (date?: Date | string): string => {
+  if (!date) return '';
   try {
-    return date.toISOString().split('T')[0];
+    // If it's already a string in YYYY-MM-DD, just return it.
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date;
+    }
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
   } catch (e) {
     return '';
   }
@@ -96,7 +102,7 @@ const defaultInitialValues: PersonalInfoFormValues = {
     pan: '',
     age: undefined,
     gender: undefined,
-    dob: undefined,
+    dob: '',
     policyHolderName: '',
     relationship: 'Self',
     policyHolderContact: '',
@@ -106,9 +112,9 @@ const defaultInitialValues: PersonalInfoFormValues = {
     sumInsured: 0,
     remainingSum: 0,
     claimType: 'cashless',
-    policyStartDate: new Date(),
-    policyEndDate: new Date(),
-    lastPremiumPaymentDate: new Date(),
+    policyStartDate: '',
+    policyEndDate: '',
+    lastPremiumPaymentDate: '',
     accountHolderName: '',
     bankName: '',
     accountNumber: '',
@@ -131,7 +137,6 @@ export default function PersonalInfoPage() {
   });
 
    useEffect(() => {
-    // We safely access localStorage and populate the form only on the client-side
     const getInitialFormValues = (): PersonalInfoFormValues => {
         if (typeof window === 'undefined') {
             return defaultInitialValues;
@@ -146,21 +151,22 @@ export default function PersonalInfoPage() {
             defaults.policyNumber = activePolicy.policyNumber;
             defaults.sumInsured = activePolicy.coverage;
             defaults.remainingSum = activePolicy.coverage;
-            defaults.policyStartDate = new Date(activePolicy.startDate);
-            defaults.policyEndDate = new Date(activePolicy.endDate);
-            defaults.lastPremiumPaymentDate = new Date(activePolicy.lastPremiumPaymentDate);
+            defaults.policyStartDate = formatDateForInput(new Date(activePolicy.startDate));
+            defaults.policyEndDate = formatDateForInput(new Date(activePolicy.endDate));
+            defaults.lastPremiumPaymentDate = formatDateForInput(new Date(activePolicy.lastPremiumPaymentDate));
         }
+
+        let dataToLoad = defaults;
 
         if (storedData) {
             const userData = JSON.parse(storedData);
-            // This is where we fix the property name mismatches
-            return {
+            dataToLoad = {
                 ...defaults,
                 patientName: userData.patientName || defaults.patientName,
                 contactNumber: userData.contactNumber || defaults.contactNumber,
                 age: userData.age ? Number(userData.age) : defaults.age,
                 gender: userData.gender || defaults.gender,
-                dob: userData.dob ? new Date(userData.dob) : defaults.dob,
+                dob: userData.dob ? formatDateForInput(userData.dob) : defaults.dob,
                 email: userData.email || defaults.email,
                 address: userData.address || defaults.address,
                 aadhaar: userData.aadhaar || defaults.aadhaar,
@@ -168,34 +174,32 @@ export default function PersonalInfoPage() {
                 policyHolderName: userData.policyHolderName || defaults.policyHolderName,
                 relationship: userData.relationship || defaults.relationship,
                 policyHolderContact: userData.policyHolderContact || defaults.policyHolderContact,
-                policyStartDate: userData.policyStartDate ? new Date(userData.policyStartDate) : defaults.policyStartDate,
-                policyEndDate: userData.policyEndDate ? new Date(userData.policyEndDate) : defaults.policyEndDate,
-                lastPremiumPaymentDate: userData.lastPremiumPaymentDate ? new Date(userData.lastPremiumPaymentDate) : defaults.lastPremiumPaymentDate,
+                policyStartDate: userData.policyStartDate ? formatDateForInput(userData.policyStartDate) : defaults.policyStartDate,
+                policyEndDate: userData.policyEndDate ? formatDateForInput(userData.policyEndDate) : defaults.policyEndDate,
+                lastPremiumPaymentDate: userData.lastPremiumPaymentDate ? formatDateForInput(userData.lastPremiumPaymentDate) : defaults.lastPremiumPaymentDate,
                 accountHolderName: userData.accountHolderName || defaults.accountHolderName,
                 bankName: userData.bankName || defaults.bankName,
                 accountNumber: userData.accountNumber || defaults.accountNumber,
-ifscCode: userData.ifscCode || defaults.ifscCode,
+                ifscCode: userData.ifscCode || defaults.ifscCode,
                 branchName: userData.branchName || defaults.branchName,
             };
+        } else {
+            const signUpData = localStorage.getItem('signUpData');
+            if (signUpData) {
+                const userData = JSON.parse(signUpData);
+                dataToLoad = {
+                    ...defaults,
+                    patientName: userData.fullName || defaults.patientName,
+                    contactNumber: userData.contactNumber || defaults.contactNumber,
+                    email: userData.email || defaults.email,
+                    aadhaar: userData.aadhaar || defaults.aadhaar,
+                    policyHolderName: userData.fullName || defaults.patientName,
+                    policyHolderContact: userData.contactNumber || defaults.contactNumber,
+                    accountHolderName: userData.fullName || defaults.patientName,
+                };
+            }
         }
-
-        // Fallback for first-time sign-up, if needed
-        const signUpData = localStorage.getItem('signUpData');
-        if (signUpData) {
-            const userData = JSON.parse(signUpData);
-             return {
-                ...defaults,
-                patientName: userData.fullName || defaults.patientName,
-                contactNumber: userData.contactNumber || defaults.contactNumber,
-                email: userData.email || defaults.email,
-                aadhaar: userData.aadhaar || defaults.aadhaar,
-                policyHolderName: userData.fullName || defaults.patientName,
-                policyHolderContact: userData.contactNumber || defaults.contactNumber,
-                accountHolderName: userData.fullName || defaults.patientName,
-            };
-        }
-
-        return defaults;
+        return dataToLoad;
     };
     const values = getInitialFormValues();
     form.reset(values);
@@ -205,15 +209,12 @@ ifscCode: userData.ifscCode || defaults.ifscCode,
   async function onSubmit(data: PersonalInfoFormValues) {
     setIsSubmitting(true);
     
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     console.log("Form data submitted:", data);
     
-    // Update local storage with the new data
     localStorage.setItem('registeredUserData', JSON.stringify(data));
     
-    // Reset the form with the new values to ensure it remains populated
     form.reset(data);
     
     toast({
@@ -298,16 +299,7 @@ ifscCode: userData.ifscCode || defaults.ifscCode,
                             type="text" 
                             placeholder="YYYY-MM-DD" 
                             {...field}
-                            value={field.value ? formatDateForInput(new Date(field.value)) : ''}
-                            onChange={(e) => {
-                                const dateValue = e.target.value;
-                                const date = new Date(dateValue);
-                                if (!isNaN(date.getTime())) {
-                                    field.onChange(date);
-                                } else {
-                                    field.onChange(undefined);
-                                }
-                            }}
+                            value={field.value ?? ''}
                         />
                       </FormControl>
                       <FormMessage />
@@ -485,16 +477,7 @@ ifscCode: userData.ifscCode || defaults.ifscCode,
                             type="text" 
                             placeholder="YYYY-MM-DD" 
                             {...field}
-                            value={field.value ? formatDateForInput(new Date(field.value)) : ''}
-                            onChange={(e) => {
-                                const dateValue = e.target.value;
-                                const date = new Date(dateValue);
-                                if (!isNaN(date.getTime())) {
-                                    field.onChange(date);
-                                } else {
-                                    field.onChange(undefined);
-                                }
-                            }}
+                            value={field.value ?? ''}
                         />
                       </FormControl>
                       <FormMessage />
@@ -512,16 +495,7 @@ ifscCode: userData.ifscCode || defaults.ifscCode,
                             type="text" 
                             placeholder="YYYY-MM-DD" 
                             {...field}
-                            value={field.value ? formatDateForInput(new Date(field.value)) : ''}
-                            onChange={(e) => {
-                                const dateValue = e.target.value;
-                                const date = new Date(dateValue);
-                                if (!isNaN(date.getTime())) {
-                                    field.onChange(date);
-                                } else {
-                                    field.onChange(undefined);
-                                }
-                            }}
+                            value={field.value ?? ''}
                         />
                       </FormControl>
                       <FormMessage />
@@ -539,16 +513,7 @@ ifscCode: userData.ifscCode || defaults.ifscCode,
                             type="text" 
                             placeholder="YYYY-MM-DD" 
                             {...field}
-                            value={field.value ? formatDateForInput(new Date(field.value)) : ''}
-                            onChange={(e) => {
-                                const dateValue = e.target.value;
-                                const date = new Date(dateValue);
-                                if (!isNaN(date.getTime())) {
-                                    field.onChange(date);
-                                } else {
-                                    field.onChange(undefined);
-                                }
-                            }}
+                            value={field.value ?? ''}
                         />
                       </FormControl>
                       <FormMessage />
