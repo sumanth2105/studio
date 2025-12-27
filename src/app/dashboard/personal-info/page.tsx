@@ -112,44 +112,6 @@ const defaultInitialValues: PersonalInfoFormValues = {
 };
 
 
-const getInitialFormValues = (): PersonalInfoFormValues => {
-    // This function will now be called inside useEffect, so localStorage is available
-    const storedData = localStorage.getItem('registeredUserData');
-    const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
-
-    const defaults = { ...defaultInitialValues };
-
-    if (activePolicy) {
-        defaults.insuranceCompany = activePolicy.provider;
-        defaults.policyNumber = activePolicy.policyNumber;
-        defaults.sumInsured = activePolicy.coverage;
-        defaults.remainingSum = activePolicy.coverage;
-        defaults.policyStartDate = new Date('2023-01-01');
-        defaults.policyEndDate = new Date('2024-01-01');
-    }
-
-    if (storedData) {
-        const userData = JSON.parse(storedData);
-        return {
-            ...defaults,
-            patientName: userData.fullName || defaults.patientName,
-            contactNumber: userData.contactNumber || defaults.contactNumber,
-            age: userData.age ? Number(userData.age) : defaults.age,
-            gender: userData.gender || defaults.gender,
-            dob: userData.dob ? new Date(userData.dob) : defaults.dob,
-            email: userData.email || defaults.email,
-            address: userData.address || defaults.address,
-            aadhaar: userData.aadhaar || defaults.aadhaar,
-            pan: userData.pan || '',
-            policyHolderName: userData.fullName || defaults.patientName,
-            policyHolderContact: userData.contactNumber || defaults.contactNumber,
-            accountHolderName: userData.fullName || defaults.patientName,
-        };
-    }
-
-    return defaults;
-};
-
 export default function PersonalInfoPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -162,6 +124,42 @@ export default function PersonalInfoPage() {
 
    useEffect(() => {
     // We safely access localStorage and populate the form only on the client-side
+    const getInitialFormValues = (): PersonalInfoFormValues => {
+        const storedData = localStorage.getItem('registeredUserData');
+        const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
+
+        const defaults = { ...defaultInitialValues };
+
+        if (activePolicy) {
+            defaults.insuranceCompany = activePolicy.provider;
+            defaults.policyNumber = activePolicy.policyNumber;
+            defaults.sumInsured = activePolicy.coverage;
+            defaults.remainingSum = activePolicy.coverage;
+            defaults.policyStartDate = new Date('2023-01-01');
+            defaults.policyEndDate = new Date('2024-01-01');
+        }
+
+        if (storedData) {
+            const userData = JSON.parse(storedData);
+            return {
+                ...defaults,
+                patientName: userData.fullName || defaults.patientName,
+                contactNumber: userData.contactNumber || defaults.contactNumber,
+                age: userData.age ? Number(userData.age) : defaults.age,
+                gender: userData.gender || defaults.gender,
+                dob: userData.dob ? new Date(userData.dob) : defaults.dob,
+                email: userData.email || defaults.email,
+                address: userData.address || defaults.address,
+                aadhaar: userData.aadhaar || defaults.aadhaar,
+                pan: userData.pan || '',
+                policyHolderName: userData.fullName || defaults.patientName,
+                policyHolderContact: userData.contactNumber || defaults.contactNumber,
+                accountHolderName: userData.fullName || defaults.patientName,
+            };
+        }
+
+        return defaults;
+    };
     const values = getInitialFormValues();
     form.reset(values);
   }, [form]);
@@ -174,6 +172,13 @@ export default function PersonalInfoPage() {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     console.log("Form data submitted:", data);
+    
+    // Update local storage with the new data
+    const { ...userDataToStore } = data;
+    localStorage.setItem('registeredUserData', JSON.stringify(userDataToStore));
+    
+    // Reset the form with the new values to ensure it remains populated
+    form.reset(data);
     
     toast({
       title: 'Information Submitted',
