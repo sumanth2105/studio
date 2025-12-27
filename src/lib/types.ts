@@ -18,6 +18,7 @@ export interface Policy {
   coverage: number;
   startDate: string;
   endDate: string;
+  lastPremiumPaymentDate: string;
 }
 
 export interface ClaimTimelineEvent {

@@ -63,6 +63,7 @@ const personalInfoSchema = z.object({
   policyType: z.enum(['individual', 'family_floater']),
   policyStartDate: z.date({ required_error: 'Policy start date is required' }),
   policyEndDate: z.date({ required_error: 'Policy end date is required' }),
+  lastPremiumPaymentDate: z.date({ required_error: 'Last premium payment date is required' }),
   sumInsured: z.coerce.number().positive('Sum insured must be positive'),
   remainingSum: z.coerce.number().positive('Remaining sum must be positive'),
   claimType: z.enum(['cashless', 'reimbursement']),
@@ -101,6 +102,7 @@ const defaultInitialValues: PersonalInfoFormValues = {
     claimType: 'cashless',
     policyStartDate: new Date(),
     policyEndDate: new Date(),
+    lastPremiumPaymentDate: new Date(),
     accountHolderName: '',
     bankName: '',
     accountNumber: '',
@@ -138,8 +140,9 @@ export default function PersonalInfoPage() {
             defaults.policyNumber = activePolicy.policyNumber;
             defaults.sumInsured = activePolicy.coverage;
             defaults.remainingSum = activePolicy.coverage;
-            defaults.policyStartDate = new Date('2023-01-01');
-            defaults.policyEndDate = new Date('2024-01-01');
+            defaults.policyStartDate = new Date(activePolicy.startDate);
+            defaults.policyEndDate = new Date(activePolicy.endDate);
+            defaults.lastPremiumPaymentDate = new Date(activePolicy.lastPremiumPaymentDate);
         }
 
         if (storedData) {
@@ -159,6 +162,9 @@ export default function PersonalInfoPage() {
                 policyHolderName: userData.policyHolderName || defaults.policyHolderName,
                 relationship: userData.relationship || defaults.relationship,
                 policyHolderContact: userData.policyHolderContact || defaults.policyHolderContact,
+                policyStartDate: userData.policyStartDate ? new Date(userData.policyStartDate) : defaults.policyStartDate,
+                policyEndDate: userData.policyEndDate ? new Date(userData.policyEndDate) : defaults.policyEndDate,
+                lastPremiumPaymentDate: userData.lastPremiumPaymentDate ? new Date(userData.lastPremiumPaymentDate) : defaults.lastPremiumPaymentDate,
                 accountHolderName: userData.accountHolderName || defaults.accountHolderName,
                 bankName: userData.bankName || defaults.bankName,
                 accountNumber: userData.accountNumber || defaults.accountNumber,
@@ -551,6 +557,49 @@ export default function PersonalInfoPage() {
                             captionLayout="dropdown-nav"
                             fromYear={1950}
                             toYear={new Date().getFullYear() + 5}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="lastPremiumPaymentDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Last Premium Payment Date</FormLabel>
+                       <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            captionLayout="dropdown-nav"
+                             disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            fromYear={2020}
+                            toYear={new Date().getFullYear()}
                           />
                         </PopoverContent>
                       </Popover>

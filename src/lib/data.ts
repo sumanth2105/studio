@@ -45,6 +45,7 @@ export const mockHolder: Holder = {
       coverage: 500000,
       startDate: '2021-01-01',
       endDate: '2024-12-31',
+      lastPremiumPaymentDate: '2023-12-15',
     },
     {
       id: 'policy-02',
@@ -54,6 +55,7 @@ export const mockHolder: Holder = {
       coverage: 1000000,
       startDate: '2020-06-01',
       endDate: '2023-05-31',
+      lastPremiumPaymentDate: '2023-05-01',
     },
   ],
   healthRecords: {
