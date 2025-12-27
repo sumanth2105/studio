@@ -44,17 +44,12 @@ import {
   UploadCloud,
   ClipboardList,
   FileCheck,
-  CalendarIcon,
 } from 'lucide-react';
 import { mockHolder } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 
 const patientSearchSchema = z.object({
@@ -67,7 +62,7 @@ const otpSchema = z.object({
 });
 
 const claimSchema = z.object({
-  admissionDate: z.date({ required_error: 'Admission date is required.' }),
+  admissionDate: z.coerce.date({ required_error: 'Admission date is required.' }),
   diagnosis: z.string().min(1, 'Diagnosis is required.'),
   treatmentType: z.enum(['Medical', 'Surgical'], {
     required_error: 'Treatment type is required.',
@@ -333,40 +328,25 @@ export default function VerifyPatientPage() {
                                     control={claimForm.control}
                                     name="admissionDate"
                                     render={({ field }) => (
-                                    <FormItem className="flex flex-col">
+                                    <FormItem>
                                         <FormLabel>Date of Admission</FormLabel>
-                                        <Popover>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                            <Button
-                                                variant={'outline'}
-                                                className={cn(
-                                                'w-full pl-3 text-left font-normal',
-                                                !field.value && 'text-muted-foreground'
-                                                )}
-                                            >
-                                                {field.value ? (
-                                                format(field.value, 'PPP')
-                                                ) : (
-                                                <span>Pick a date</span>
-                                                )}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                            </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                            <Calendar
-                                            mode="single"
-                                            selected={field.value}
-                                            onSelect={field.onChange}
-                                            disabled={date =>
-                                                date > new Date() ||
-                                                date < new Date('1900-01-01')
-                                            }
-                                            initialFocus
+                                        <FormControl>
+                                            <Input 
+                                                type="text" 
+                                                placeholder="YYYY-MM-DD"
+                                                {...field}
+                                                value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                                                onChange={(e) => {
+                                                    const dateValue = e.target.value;
+                                                    const date = new Date(dateValue);
+                                                    if (!isNaN(date.getTime())) {
+                                                        field.onChange(date);
+                                                    } else {
+                                                        field.onChange(undefined);
+                                                    }
+                                                }}
                                             />
-                                        </PopoverContent>
-                                        </Popover>
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                     )}
@@ -568,3 +548,5 @@ export default function VerifyPatientPage() {
     </div>
   );
 }
+
+    

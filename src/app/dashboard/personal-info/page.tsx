@@ -33,11 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Upload, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { mockHolder } from '@/lib/data';
 
@@ -47,7 +43,7 @@ const personalInfoSchema = z.object({
   patientName: z.string().min(1, 'Full name is required'),
   age: z.coerce.number().min(0, 'Age must be a positive number').optional(),
   gender: z.enum(['male', 'female', 'other']).optional(),
-  dob: z.date({ required_error: 'Date of birth is required' }).optional(),
+  dob: z.coerce.date({ required_error: 'Date of birth is required' }).optional(),
   contactNumber: z.string().min(10, 'Must be a valid 10-digit number'),
   email: z.string().email('Invalid email address'),
   address: z.string().min(1, 'Residential address is required'),
@@ -61,9 +57,9 @@ const personalInfoSchema = z.object({
   insuranceCompany: z.string().min(1, 'Insurance company is required'),
   policyNumber: z.string().min(1, 'Policy number is required'),
   policyType: z.enum(['individual', 'family_floater']),
-  policyStartDate: z.date({ required_error: 'Policy start date is required' }),
-  policyEndDate: z.date({ required_error: 'Policy end date is required' }),
-  lastPremiumPaymentDate: z.date({ required_error: 'Last premium payment date is required' }),
+  policyStartDate: z.coerce.date({ required_error: 'Policy start date is required' }),
+  policyEndDate: z.coerce.date({ required_error: 'Policy end date is required' }),
+  lastPremiumPaymentDate: z.coerce.date({ required_error: 'Last premium payment date is required' }),
   sumInsured: z.coerce.number().positive('Sum insured must be positive'),
   remainingSum: z.coerce.number().positive('Remaining sum must be positive'),
   claimType: z.enum(['cashless', 'reimbursement']),
@@ -80,6 +76,16 @@ const personalInfoSchema = z.object({
 });
 
 type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
+
+const formatDateForInput = (date?: Date): string => {
+  if (!date || isNaN(date.getTime())) return '';
+  try {
+    return date.toISOString().split('T')[0];
+  } catch (e) {
+    return '';
+  }
+};
+
 
 const defaultInitialValues: PersonalInfoFormValues = {
     patientName: '',
@@ -168,7 +174,7 @@ export default function PersonalInfoPage() {
                 accountHolderName: userData.accountHolderName || defaults.accountHolderName,
                 bankName: userData.bankName || defaults.bankName,
                 accountNumber: userData.accountNumber || defaults.accountNumber,
-                ifscCode: userData.ifscCode || defaults.ifscCode,
+ifscCode: userData.ifscCode || defaults.ifscCode,
                 branchName: userData.branchName || defaults.branchName,
             };
         }
@@ -285,41 +291,25 @@ export default function PersonalInfoPage() {
                   control={form.control}
                   name="dob"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel>Date of Birth</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(new Date(field.value), "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            captionLayout="dropdown-nav"
-                            fromYear={1950}
-                            toYear={new Date().getFullYear()}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <FormControl>
+                        <Input 
+                            type="text" 
+                            placeholder="YYYY-MM-DD" 
+                            {...field}
+                            value={field.value ? formatDateForInput(new Date(field.value)) : ''}
+                            onChange={(e) => {
+                                const dateValue = e.target.value;
+                                const date = new Date(dateValue);
+                                if (!isNaN(date.getTime())) {
+                                    field.onChange(date);
+                                } else {
+                                    field.onChange(undefined);
+                                }
+                            }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -488,38 +478,25 @@ export default function PersonalInfoPage() {
                   control={form.control}
                   name="policyStartDate"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel>Policy Start Date</FormLabel>
-                       <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(new Date(field.value), "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            captionLayout="dropdown-nav"
-                            fromYear={1950}
-                            toYear={new Date().getFullYear()}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                       <FormControl>
+                        <Input 
+                            type="text" 
+                            placeholder="YYYY-MM-DD" 
+                            {...field}
+                            value={field.value ? formatDateForInput(new Date(field.value)) : ''}
+                            onChange={(e) => {
+                                const dateValue = e.target.value;
+                                const date = new Date(dateValue);
+                                if (!isNaN(date.getTime())) {
+                                    field.onChange(date);
+                                } else {
+                                    field.onChange(undefined);
+                                }
+                            }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -528,38 +505,25 @@ export default function PersonalInfoPage() {
                   control={form.control}
                   name="policyEndDate"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel>Policy End Date</FormLabel>
-                       <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(new Date(field.value), "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            captionLayout="dropdown-nav"
-                            fromYear={1950}
-                            toYear={new Date().getFullYear() + 5}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                       <FormControl>
+                        <Input 
+                            type="text" 
+                            placeholder="YYYY-MM-DD" 
+                            {...field}
+                            value={field.value ? formatDateForInput(new Date(field.value)) : ''}
+                            onChange={(e) => {
+                                const dateValue = e.target.value;
+                                const date = new Date(dateValue);
+                                if (!isNaN(date.getTime())) {
+                                    field.onChange(date);
+                                } else {
+                                    field.onChange(undefined);
+                                }
+                            }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -568,41 +532,25 @@ export default function PersonalInfoPage() {
                   control={form.control}
                   name="lastPremiumPaymentDate"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel>Last Premium Payment Date</FormLabel>
-                       <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(new Date(field.value), "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            captionLayout="dropdown-nav"
-                             disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            fromYear={2020}
-                            toYear={new Date().getFullYear()}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                       <FormControl>
+                        <Input 
+                            type="text" 
+                            placeholder="YYYY-MM-DD" 
+                            {...field}
+                            value={field.value ? formatDateForInput(new Date(field.value)) : ''}
+                            onChange={(e) => {
+                                const dateValue = e.target.value;
+                                const date = new Date(dateValue);
+                                if (!isNaN(date.getTime())) {
+                                    field.onChange(date);
+                                } else {
+                                    field.onChange(undefined);
+                                }
+                            }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -790,3 +738,5 @@ export default function PersonalInfoPage() {
     </Card>
   );
 }
+
+    
