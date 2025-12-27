@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -21,29 +21,42 @@ import { mockClaims, mockHolder, mockHospital } from '@/lib/data';
 import type { Claim } from '@/lib/types';
 import { ClaimStatusBadge } from '@/components/dashboard/claim-status-badge';
 import { cn } from '@/lib/utils';
-import { ClaimReviewPanel } from '@/components/insurer/claim-review-panel';
 import { intervalToDuration } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function IncomingClaimsPage() {
-  const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
+  const [claims, setClaims] = useState<Claim[]>([]);
   const router = useRouter();
+  const { toast } = useToast();
 
-  // Filter for claims that need manual review or are auto-approved
-  const incomingClaims = mockClaims.filter(
-    (c) => c.status === 'Manual Review' || c.status === 'Insurance Claim Guaranteed'
-  );
-
-  const handleSelectClaim = (claim: Claim) => {
-    setSelectedClaim(claim);
-  };
+  useEffect(() => {
+    // Filter for claims that need manual review or are auto-approved
+    const incoming = mockClaims.filter(
+      (c) =>
+        c.status === 'Manual Review' ||
+        c.status === 'Insurance Claim Guaranteed'
+    );
+    setClaims(incoming);
+  }, []);
 
   const handleRowClick = (claim: Claim) => {
     router.push(`/dashboard/insurer/claims/${claim.id}`);
   };
 
-  const handleClosePanel = () => {
-    setSelectedClaim(null);
+  const handleDecision = (
+    e: React.MouseEvent,
+    claimId: string,
+    decision: 'Approved' | 'Rejected'
+  ) => {
+    e.stopPropagation(); // Prevent row click from firing
+    setClaims((prevClaims) => prevClaims.filter((c) => c.id !== claimId));
+    toast({
+      title: `Claim ${decision}`,
+      description: `Claim ${claimId} has been marked as ${decision}.`,
+    });
   };
 
   const getSlaColor = (submissionDate: string) => {
@@ -102,11 +115,12 @@ export default function IncomingClaimsPage() {
                 <TableHead>Amount</TableHead>
                 <TableHead>SLA</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {incomingClaims.length > 0 ? (
-                incomingClaims.map((claim) => (
+              {claims.length > 0 ? (
+                claims.map((claim) => (
                   <TableRow
                     key={claim.id}
                     onClick={() => handleRowClick(claim)}
@@ -141,11 +155,33 @@ export default function IncomingClaimsPage() {
                     <TableCell>
                       <ClaimStatusBadge status={claim.status} />
                     </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700"
+                          onClick={(e) => handleDecision(e, claim.id, 'Approved')}
+                        >
+                          <ThumbsUp className="h-4 w-4 mr-2" />
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-destructive text-destructive hover:bg-red-50 hover:text-destructive"
+                          onClick={(e) => handleDecision(e, claim.id, 'Rejected')}
+                        >
+                          <ThumbsDown className="h-4 w-4 mr-2" />
+                          Reject
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     No incoming claims to review.
                   </TableCell>
                 </TableRow>
