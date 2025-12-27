@@ -9,10 +9,10 @@ const hospitalLogo1 =
 
 export const mockHolder: Holder = {
   id: 'user-001',
-  name: 'Aarav Sharma',
+  name: 'Insurance Holder',
   mobile: '98XXXXXX01',
   aadhaarLast4: '1234',
-  avatarUrl: userAvatar1,
+  avatarUrl: '',
   role: 'holder',
   trustScore: 85,
   emergencyNominee: {

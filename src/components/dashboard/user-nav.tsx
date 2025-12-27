@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Holder, Insurer, Hospital, User } from '@/lib/types';
+import type { Holder, Insurer, User } from '@/lib/types';
 import Link from 'next/link';
 import { LogOut, User as UserIcon } from 'lucide-react';
 
@@ -25,7 +25,7 @@ export function UserNav({ user }: UserNavProps) {
     if (names.length > 1) {
       return `${names[0][0]}${names[names.length - 1][0]}`;
     }
-    return names[0].substring(0, 2);
+    return name.substring(0, 2);
   };
   
   const hasAvatar = 'avatarUrl' in user && user.avatarUrl;
@@ -58,7 +58,7 @@ export function UserNav({ user }: UserNavProps) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/">
+          <Link href="/login">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </Link>
