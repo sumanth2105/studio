@@ -163,15 +163,7 @@ export default function DashboardLayout({
               <SidebarMenuButton asChild isActive={getIsActive('/dashboard/verify-patient')}>
                 <Link href="/dashboard/verify-patient">
                   <FileSearch />
-                  Verify Patient
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/new-claim')}>
-                <Link href="/dashboard/new-claim">
-                  <FilePlus />
-                  New Claim
+                  Verify & Claim
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
