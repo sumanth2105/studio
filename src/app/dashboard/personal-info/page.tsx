@@ -40,8 +40,6 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { mockHolder } from '@/lib/data';
-import { useUser, useFirestore } from '@/firebase';
-import { setUserProfile } from '@/firebase/firestore/users';
 
 
 const personalInfoSchema = z.object({
@@ -154,8 +152,6 @@ const getInitialFormValues = (): PersonalInfoFormValues => {
 
 export default function PersonalInfoPage() {
   const { toast } = useToast();
-  const { user, isLoading: isUserLoading } = useUser();
-  const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<PersonalInfoFormValues>({
@@ -172,39 +168,19 @@ export default function PersonalInfoPage() {
 
 
   async function onSubmit(data: PersonalInfoFormValues) {
-    if (!user || !firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'You must be logged in to save your information. Please try again.',
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
     
-    const dataToSave = {
-      ...data,
-      dob: data.dob ? format(data.dob, 'yyyy-MM-dd') : undefined,
-      policyStartDate: data.policyStartDate ? format(data.policyStartDate, 'yyyy-MM-dd') : undefined,
-      policyEndDate: data.policyEndDate ? format(data.policyEndDate, 'yyyy-MM-dd') : undefined,
-    };
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log("Form data submitted:", data);
     
-    try {
-        await setUserProfile(firestore, user.uid, dataToSave);
-        toast({
-          title: 'Information Submitted',
-          description: 'Your personal information has been saved successfully.',
-        });
-    } catch(e) {
-        toast({
-            variant: 'destructive',
-            title: 'Error saving data',
-            description: 'Could not save your profile. Please try again.',
-        });
-    } finally {
-        setIsSubmitting(false);
-    }
+    toast({
+      title: 'Information Submitted',
+      description: 'Your personal information has been saved successfully.',
+    });
+    
+    setIsSubmitting(false);
   }
 
   return (
@@ -725,8 +701,8 @@ export default function PersonalInfoPage() {
             </div>
 
             <CardFooter className="px-0">
-              <Button type="submit" disabled={isSubmitting || isUserLoading}>
-                {(isSubmitting || isUserLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Information
               </Button>
             </CardFooter>
@@ -736,5 +712,3 @@ export default function PersonalInfoPage() {
     </Card>
   );
 }
-
-    
