@@ -116,6 +116,7 @@ const defaultInitialValues: PersonalInfoFormValues = {
 
 
 const getInitialFormValues = (): PersonalInfoFormValues => {
+    // This function will now only be called on the client side
     const storedData = localStorage.getItem('registeredUserData');
     const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
 
@@ -161,7 +162,7 @@ export default function PersonalInfoPage() {
   
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
-    defaultValues: getInitialFormValues(),
+    defaultValues: defaultInitialValues, // Initialize with safe defaults
     mode: 'onBlur'
   });
 
@@ -174,6 +175,7 @@ export default function PersonalInfoPage() {
   }, [auth]);
 
    useEffect(() => {
+    // We access localStorage and reset the form only on the client side
     const values = getInitialFormValues();
     form.reset(values);
   }, [form]);
