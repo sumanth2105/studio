@@ -24,6 +24,7 @@ import {
   ClipboardCheck,
   Inbox,
   LayoutGrid,
+  ClipboardList,
 } from 'lucide-react';
 
 import {
@@ -213,26 +214,18 @@ export default function DashboardLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/all-claims')}>
+                <Link href="/dashboard/insurer/all-claims">
+                  <ClipboardList />
+                  All Claims
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/hospital-verification')}>
                 <Link href="/dashboard/insurer/hospital-verification">
                   <Hospital />
                   Hospital Verification
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/approved-claims')}>
-                <Link href="/dashboard/insurer/approved-claims">
-                  <ClipboardCheck />
-                  Approved Claims
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/rejected-pending-claims')}>
-                <Link href="/dashboard/insurer/rejected-pending-claims">
-                  <FileClock />
-                  Rejected / Pending
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
