@@ -125,6 +125,9 @@ export default function PersonalInfoPage() {
    useEffect(() => {
     // We safely access localStorage and populate the form only on the client-side
     const getInitialFormValues = (): PersonalInfoFormValues => {
+        if (typeof window === 'undefined') {
+            return defaultInitialValues;
+        }
         const storedData = localStorage.getItem('registeredUserData');
         const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
 
@@ -141,9 +144,10 @@ export default function PersonalInfoPage() {
 
         if (storedData) {
             const userData = JSON.parse(storedData);
+            // This is where we fix the property name mismatches
             return {
                 ...defaults,
-                patientName: userData.fullName || defaults.patientName,
+                patientName: userData.patientName || defaults.patientName,
                 contactNumber: userData.contactNumber || defaults.contactNumber,
                 age: userData.age ? Number(userData.age) : defaults.age,
                 gender: userData.gender || defaults.gender,
@@ -152,6 +156,27 @@ export default function PersonalInfoPage() {
                 address: userData.address || defaults.address,
                 aadhaar: userData.aadhaar || defaults.aadhaar,
                 pan: userData.pan || '',
+                policyHolderName: userData.policyHolderName || defaults.policyHolderName,
+                relationship: userData.relationship || defaults.relationship,
+                policyHolderContact: userData.policyHolderContact || defaults.policyHolderContact,
+                accountHolderName: userData.accountHolderName || defaults.accountHolderName,
+                bankName: userData.bankName || defaults.bankName,
+                accountNumber: userData.accountNumber || defaults.accountNumber,
+                ifscCode: userData.ifscCode || defaults.ifscCode,
+                branchName: userData.branchName || defaults.branchName,
+            };
+        }
+
+        // Fallback for first-time sign-up, if needed
+        const signUpData = localStorage.getItem('signUpData');
+        if (signUpData) {
+            const userData = JSON.parse(signUpData);
+             return {
+                ...defaults,
+                patientName: userData.fullName || defaults.patientName,
+                contactNumber: userData.contactNumber || defaults.contactNumber,
+                email: userData.email || defaults.email,
+                aadhaar: userData.aadhaar || defaults.aadhaar,
                 policyHolderName: userData.fullName || defaults.patientName,
                 policyHolderContact: userData.contactNumber || defaults.contactNumber,
                 accountHolderName: userData.fullName || defaults.patientName,
@@ -174,8 +199,7 @@ export default function PersonalInfoPage() {
     console.log("Form data submitted:", data);
     
     // Update local storage with the new data
-    const { ...userDataToStore } = data;
-    localStorage.setItem('registeredUserData', JSON.stringify(userDataToStore));
+    localStorage.setItem('registeredUserData', JSON.stringify(data));
     
     // Reset the form with the new values to ensure it remains populated
     form.reset(data);
@@ -717,3 +741,5 @@ export default function PersonalInfoPage() {
     </Card>
   );
 }
+
+    
