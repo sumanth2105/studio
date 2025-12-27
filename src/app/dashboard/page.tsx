@@ -26,7 +26,7 @@ export default function DashboardPage() {
     <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Welcome back, {name}!</CardTitle>
+            <CardTitle>Welcome back!</CardTitle>
             <CardDescription>
               Here's an overview of your Suraksha Kavach account.
             </CardDescription>
