@@ -40,8 +40,10 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { mockHolder } from '@/lib/data';
-import { useAuth, useFirestore } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { setUserProfile } from '@/firebase/firestore/users';
+import { signInAnonymously, getAuth } from 'firebase/auth';
+
 
 const personalInfoSchema = z.object({
   // Patient Details
@@ -100,8 +102,8 @@ const defaultInitialValues: PersonalInfoFormValues = {
     sumInsured: 0,
     remainingSum: 0,
     claimType: 'cashless',
-    policyStartDate: undefined,
-    policyEndDate: undefined,
+    policyStartDate: new Date(),
+    policyEndDate: new Date(),
     accountHolderName: '',
     bankName: '',
     accountNumber: '',
@@ -152,15 +154,22 @@ const getInitialFormValues = (): PersonalInfoFormValues => {
 
 export default function PersonalInfoPage() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
-    defaultValues: defaultInitialValues,
+    defaultValues: getInitialFormValues(),
     mode: 'onBlur'
   });
+
+   useEffect(() => {
+    const auth = getAuth();
+    if (!auth.currentUser) {
+      signInAnonymously(auth);
+    }
+  }, []);
 
    useEffect(() => {
     const values = getInitialFormValues();
@@ -169,6 +178,10 @@ export default function PersonalInfoPage() {
 
 
   async function onSubmit(data: PersonalInfoFormValues) {
+    if (isUserLoading) {
+        // Should not happen as button is disabled, but as a safeguard
+        return;
+    }
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
@@ -723,8 +736,8 @@ export default function PersonalInfoPage() {
             </div>
 
             <CardFooter className="px-0">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={isSubmitting || isUserLoading}>
+                {(isSubmitting || isUserLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Information
               </Button>
             </CardFooter>
