@@ -81,7 +81,7 @@ const personalInfoSchema = z.object({
 
 type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
 
-const defaultInitialValues: Partial<PersonalInfoFormValues> = {
+const defaultInitialValues: PersonalInfoFormValues = {
     patientName: '',
     contactNumber: '',
     email: '',
@@ -109,10 +109,11 @@ const defaultInitialValues: Partial<PersonalInfoFormValues> = {
     branchName: '',
     tpaName: '',
     tpaId: '',
+    bankProof: undefined
 };
 
 
-const getInitialFormValues = (): Partial<PersonalInfoFormValues> => {
+const getInitialFormValues = (): PersonalInfoFormValues => {
     const storedData = localStorage.getItem('registeredUserData');
     const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
 
@@ -153,22 +154,18 @@ export default function PersonalInfoPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const firestore = useFirestore();
-  const [initialValues, setInitialValues] = useState<Partial<PersonalInfoFormValues>>(defaultInitialValues);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    setInitialValues(getInitialFormValues());
-  }, []);
   
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
-    values: initialValues as PersonalInfoFormValues,
+    defaultValues: defaultInitialValues,
     mode: 'onBlur'
   });
 
    useEffect(() => {
-    form.reset(initialValues as PersonalInfoFormValues);
-  }, [initialValues, form]);
+    const values = getInitialFormValues();
+    form.reset(values);
+  }, [form]);
 
 
   async function onSubmit(data: PersonalInfoFormValues) {
@@ -191,14 +188,21 @@ export default function PersonalInfoPage() {
       policyEndDate: data.policyEndDate ? format(data.policyEndDate, 'yyyy-MM-dd') : undefined,
     };
     
-    await setUserProfile(firestore, user.uid, dataToSave);
-    
-    setIsSubmitting(false);
-
-    toast({
-      title: 'Information Submitted',
-      description: 'Your personal information has been saved successfully.',
-    });
+    try {
+        await setUserProfile(firestore, user.uid, dataToSave);
+        toast({
+          title: 'Information Submitted',
+          description: 'Your personal information has been saved successfully.',
+        });
+    } catch(e) {
+        toast({
+            variant: 'destructive',
+            title: 'Error saving data',
+            description: 'Could not save your profile. Please try again.',
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   }
 
   return (
@@ -236,7 +240,7 @@ export default function PersonalInfoPage() {
                     <FormItem>
                       <FormLabel>Age</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Enter age" {...field} />
+                        <Input type="number" placeholder="Enter age" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -366,7 +370,7 @@ export default function PersonalInfoPage() {
                     <FormItem>
                       <FormLabel>PAN Number (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter PAN number" {...field} />
+                        <Input placeholder="Enter PAN number" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -601,7 +605,7 @@ export default function PersonalInfoPage() {
                     <FormItem>
                       <FormLabel>TPA Name (if applicable)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter TPA Name" {...field} />
+                        <Input placeholder="Enter TPA Name" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -614,7 +618,7 @@ export default function PersonalInfoPage() {
                     <FormItem>
                       <FormLabel>TPA ID / Contact (if applicable)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter TPA ID or Contact" {...field} />
+                        <Input placeholder="Enter TPA ID or Contact" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -730,5 +734,3 @@ export default function PersonalInfoPage() {
     </Card>
   );
 }
-
-    
