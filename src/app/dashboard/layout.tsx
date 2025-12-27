@@ -25,6 +25,7 @@ import {
   Inbox,
   LayoutGrid,
   ClipboardList,
+  FilePieChart,
 } from 'lucide-react';
 
 import {
@@ -218,6 +219,14 @@ export default function DashboardLayout({
                 <Link href="/dashboard/insurer/all-claims">
                   <ClipboardList />
                   All Claims
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={getIsActive('/dashboard/insurer/types-of-claims')}>
+                <Link href="/dashboard/insurer/types-of-claims">
+                  <FilePieChart />
+                  Types of Claims
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
