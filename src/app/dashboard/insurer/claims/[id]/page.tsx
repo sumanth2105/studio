@@ -67,9 +67,8 @@ const VerificationIndicator = ({
   );
 };
 
-export default function ClaimReviewPage({ params }: { params: { id: string } }) {
+export default function ClaimReviewPage({ params: {id} }: { params: { id: string } }) {
   const { toast } = useToast();
-  const { id } = params;
   const claim = mockClaims.find((c) => c.id === id);
 
   if (!claim || !['Manual Review', 'Insurance Claim Guaranteed'].includes(claim.status)) {
