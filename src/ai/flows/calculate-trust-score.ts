@@ -42,13 +42,21 @@ export type CalculateTrustScoreInput = z.infer<
 
 const CalculateTrustScoreOutputSchema = z.object({
   score: z.number().describe('The calculated trust score between 0 and 100.'),
-  category: z.string().describe('The risk category (e.g., Highly Trusted, Trusted, Moderate Risk, High Risk).'),
+  category: z
+    .string()
+    .describe(
+      'The risk category (e.g., Highly Trusted, Trusted, Moderate Risk, High Risk).'
+    ),
   explanation: z
     .array(z.string())
-    .describe('An array of 3-5 bullet points explaining the key factors that influenced the score.'),
+    .describe(
+      'An array of 3-5 bullet points explaining the key factors that influenced the score.'
+    ),
   suggestions: z
     .array(z.string())
-    .describe('An array of 2-3 actionable suggestions for the user to improve their score.'),
+    .describe(
+      'An array of 2-3 actionable suggestions for the user to improve their score.'
+    ),
 });
 
 export type CalculateTrustScoreOutput = z.infer<
@@ -63,7 +71,7 @@ export async function calculateTrustScore(
 
 const prompt = ai.definePrompt({
   name: 'calculateTrustScorePrompt',
-  input: { schema: CalculateTrustScoreInputSchema },
+  input: { schema: z.object({ jsonData: z.string() }) },
   output: { schema: CalculateTrustScoreOutputSchema },
   prompt: `You are a sophisticated risk assessment engine for an insurance platform. Your task is to calculate a Trust Score for a policyholder based on the provided JSON data.
 
@@ -77,7 +85,7 @@ const prompt = ai.definePrompt({
 
   **Input Data:**
   \`\`\`json
-  {{{jsonStringify .}}}
+  {{{jsonData}}}
   \`\`\`
 
   **Your Task:**
@@ -95,7 +103,7 @@ const calculateTrustScoreFlow = ai.defineFlow(
     outputSchema: CalculateTrustScoreOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await prompt({ jsonData: JSON.stringify(input) });
     return output!;
   }
 );
