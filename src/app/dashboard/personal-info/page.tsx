@@ -115,6 +115,7 @@ const defaultInitialValues: PersonalInfoFormValues = {
 
 
 const getInitialFormValues = (): PersonalInfoFormValues => {
+    // This function will now be called inside useEffect, so localStorage is available
     const storedData = localStorage.getItem('registeredUserData');
     const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
 
@@ -164,6 +165,7 @@ export default function PersonalInfoPage() {
   });
 
    useEffect(() => {
+    // We safely access localStorage and populate the form only on the client-side
     const values = getInitialFormValues();
     form.reset(values);
   }, [form]);
@@ -171,12 +173,10 @@ export default function PersonalInfoPage() {
 
   async function onSubmit(data: PersonalInfoFormValues) {
     if (!user || !firestore) {
-      // This case should ideally not happen anymore with anonymous auth at root
-      // But as a fallback, we show a generic error.
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not connect to the database. Please try again later.',
+        description: 'You must be logged in to save your information. Please try again.',
       });
       return;
     }
@@ -736,3 +736,5 @@ export default function PersonalInfoPage() {
     </Card>
   );
 }
+
+    
