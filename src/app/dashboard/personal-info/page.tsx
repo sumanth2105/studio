@@ -79,85 +79,93 @@ const personalInfoSchema = z.object({
 
 type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
 
+const defaultInitialValues: Partial<PersonalInfoFormValues> = {
+    patientName: '',
+    contactNumber: '',
+    email: '',
+    address: '',
+    aadhaar: '',
+    pan: '',
+    age: undefined,
+    gender: undefined,
+    dob: undefined,
+    policyHolderName: '',
+    relationship: 'Self',
+    policyHolderContact: '',
+    insuranceCompany: '',
+    policyNumber: '',
+    policyType: 'family_floater',
+    sumInsured: 0,
+    remainingSum: 0,
+    claimType: 'cashless',
+    policyStartDate: undefined,
+    policyEndDate: undefined,
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    ifscCode: '',
+    branchName: '',
+    tpaName: '',
+    tpaId: '',
+};
+
+
 const getInitialFormValues = (): Partial<PersonalInfoFormValues> => {
-    if (typeof window === 'undefined') {
-        return {};
-    }
-    
     const storedData = localStorage.getItem('registeredUserData');
     const activePolicy = mockHolder.policies.find(p => p.status === 'Active');
+
+    const defaults = { ...defaultInitialValues };
+
+    if (activePolicy) {
+        defaults.insuranceCompany = activePolicy.provider;
+        defaults.policyNumber = activePolicy.policyNumber;
+        defaults.sumInsured = activePolicy.coverage;
+        defaults.remainingSum = activePolicy.coverage;
+        defaults.policyStartDate = new Date('2023-01-01');
+        defaults.policyEndDate = new Date('2024-01-01');
+    }
 
     if (storedData) {
         const userData = JSON.parse(storedData);
         return {
-            patientName: userData.fullName || '',
-            contactNumber: userData.contactNumber || '',
-            age: userData.age ? Number(userData.age) : undefined,
-            gender: userData.gender || undefined,
-            dob: userData.dob ? new Date(userData.dob) : undefined,
-            email: userData.email || '',
-            address: userData.address || '',
-            aadhaar: userData.aadhaar || '',
-            pan: userData.pan || '',
-
-            // Default policy details as they are not in sign up
-            policyHolderName: userData.fullName || '',
-            relationship: 'Self',
-            policyHolderContact: userData.contactNumber || '',
-            insuranceCompany: activePolicy?.provider || '',
-            policyNumber: activePolicy?.policyNumber || '',
-            policyType: 'family_floater',
-            sumInsured: activePolicy?.coverage || 0,
-            remainingSum: activePolicy?.coverage || 0,
-            claimType: 'cashless',
-            policyStartDate: new Date('2023-01-01'),
-            policyEndDate: new Date('2024-01-01'),
-            accountHolderName: userData.fullName || '',
-            bankName: 'National Bank of India',
-            accountNumber: '',
-            ifscCode: '',
-            branchName: '',
+            ...defaults,
+            patientName: userData.fullName || defaults.patientName,
+            contactNumber: userData.contactNumber || defaults.contactNumber,
+            age: userData.age ? Number(userData.age) : defaults.age,
+            gender: userData.gender || defaults.gender,
+            dob: userData.dob ? new Date(userData.dob) : defaults.dob,
+            email: userData.email || defaults.email,
+            address: userData.address || defaults.address,
+            aadhaar: userData.aadhaar || defaults.aadhaar,
+            pan: userData.pan || defaults.pan,
+            policyHolderName: userData.fullName || defaults.patientName,
+            policyHolderContact: userData.contactNumber || defaults.contactNumber,
+            accountHolderName: userData.fullName || defaults.patientName,
         };
     }
 
-    return {
-        // Leave everything blank if no signed up user
-        patientName: '',
-        contactNumber: '',
-        email: '',
-        address: '',
-        aadhaar: '',
-        pan: '',
-        policyHolderName: '',
-        relationship: '',
-        policyHolderContact: '',
-        insuranceCompany: '',
-        policyNumber: '',
-        sumInsured: 0,
-        remainingSum: 0,
-        accountHolderName: '',
-        bankName: '',
-        accountNumber: '',
-        ifscCode: '',
-        branchName: '',
-    };
+    return defaults;
 };
 
 export default function PersonalInfoPage() {
   const { toast } = useToast();
-  const [initialValues, setInitialValues] = useState<Partial<PersonalInfoFormValues>>({});
+  // Initialize state with default values to prevent uncontrolled -> controlled error
+  const [initialValues, setInitialValues] = useState<Partial<PersonalInfoFormValues>>(defaultInitialValues);
 
   useEffect(() => {
+    // getInitialFormValues now depends on localStorage, so it should only run on the client.
     setInitialValues(getInitialFormValues());
   }, []);
   
   const form = useForm<PersonalInfoFormValues>({
     resolver: zodResolver(personalInfoSchema),
-    values: initialValues as PersonalInfoFormValues,
+    values: initialValues as PersonalInfoFormValues, // Use the state that has default values
     mode: 'onBlur'
   });
 
    useEffect(() => {
+    // Reset the form whenever initialValues changes. This is key to populating the form
+    // after the client-side data is loaded.
     form.reset(initialValues as PersonalInfoFormValues);
   }, [initialValues, form]);
 
@@ -250,7 +258,7 @@ export default function PersonalInfoPage() {
                               )}
                             >
                               {field.value ? (
-                                format(field.value, "PPP")
+                                format(new Date(field.value), "PPP")
                               ) : (
                                 <span>Pick a date</span>
                               )}
@@ -266,7 +274,9 @@ export default function PersonalInfoPage() {
                             disabled={(date) =>
                               date > new Date() || date < new Date("1900-01-01")
                             }
-                            initialFocus
+                            captionLayout="dropdown-nav"
+                            fromYear={1950}
+                            toYear={new Date().getFullYear()}
                           />
                         </PopoverContent>
                       </Popover>
@@ -451,7 +461,7 @@ export default function PersonalInfoPage() {
                               )}
                             >
                               {field.value ? (
-                                format(field.value, "PPP")
+                                format(new Date(field.value), "PPP")
                               ) : (
                                 <span>Pick a date</span>
                               )}
@@ -464,7 +474,9 @@ export default function PersonalInfoPage() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            initialFocus
+                            captionLayout="dropdown-nav"
+                            fromYear={1950}
+                            toYear={new Date().getFullYear()}
                           />
                         </PopoverContent>
                       </Popover>
@@ -489,7 +501,7 @@ export default function PersonalInfoPage() {
                               )}
                             >
                               {field.value ? (
-                                format(field.value, "PPP")
+                                format(new Date(field.value), "PPP")
                               ) : (
                                 <span>Pick a date</span>
                               )}
@@ -502,7 +514,9 @@ export default function PersonalInfoPage() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            initialFocus
+                            captionLayout="dropdown-nav"
+                            fromYear={1950}
+                            toYear={new Date().getFullYear() + 5}
                           />
                         </PopoverContent>
                       </Popover>
