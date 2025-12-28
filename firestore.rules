@@ -7,7 +7,7 @@
  *
  * Data Structure: The data is organized hierarchically. Core user data resides in
  * `/insuranceHolders/{insuranceHolderId}`, with all related sensitive sub-collections like
- * `claims`, `bills`, and `medicalRecords` nested underneath. This structure provides a clear
+ * `claims`, `bills`, `medicalRecords` and `documents` nested underneath. This structure provides a clear
  * and secure boundary for user-owned data. General-purpose data like `/hospitals` and
  * `/insuranceCompanies`, and system-level data like `/auditLogs`, are stored in top-level
  * collections.
@@ -123,6 +123,21 @@ service cloud.firestore {
           allow delete: if isExistingOwner(insuranceHolderId);
         }
       }
+      
+      /**
+       * @description Controls access to an insurance holder's uploaded documents.
+       * @path /insuranceHolders/{insuranceHolderId}/documents/{documentId}
+       * @allow (list) User 'user_abc' lists all their documents under '/insuranceHolders/user_abc/documents'.
+       * @allow (create) User 'user_abc' creates a new document record with `userId: 'user_abc'` in the document body.
+       * @deny (get) User 'user_xyz' tries to read a document belonging to 'user_abc'.
+       * @principle Enforces document ownership for all operations based on the parent path.
+       */
+      match /documents/{documentId} {
+        allow get, list: if isOwner(insuranceHolderId);
+        allow create: if isOwner(insuranceHolderId) && request.resource.data.userId == insuranceHolderId;
+        allow update: if isExistingOwner(insuranceHolderId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(insuranceHolderId);
+      }
 
       /**
        * @description Controls access to an insurance holder's emergency nominee.
@@ -198,3 +213,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

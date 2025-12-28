@@ -28,6 +28,7 @@ import { mockClaims, mockHolder, mockHospital } from '@/lib/data';
 import { ClaimStatusBadge } from '@/components/dashboard/claim-status-badge';
 import { ClaimExplanation } from '@/components/dashboard/claim-explanation';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 
 export default function ClaimDetailPage({ params }: { params: { id: string } }) {
   const claim = mockClaims.find((c) => c.id === params.id);
@@ -148,7 +149,11 @@ export default function ClaimDetailPage({ params }: { params: { id: string } }) 
                 <TableBody>
                     {claim.documents.map(doc => (
                         <TableRow key={doc.id}>
-                            <TableCell className="font-medium text-primary hover:underline cursor-pointer">{doc.name}</TableCell>
+                            <TableCell className="font-medium">
+                              <Link href={doc.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                {doc.name}
+                              </Link>
+                            </TableCell>
                             <TableCell>{doc.type}</TableCell>
                             <TableCell>{new Date(doc.uploadDate).toLocaleDateString()}</TableCell>
                         </TableRow>
@@ -161,3 +166,5 @@ export default function ClaimDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+
+    

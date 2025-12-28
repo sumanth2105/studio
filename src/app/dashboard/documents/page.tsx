@@ -3,6 +3,22 @@
 
 import { useState, useEffect } from 'react';
 import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from 'firebase/storage';
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs,
+  doc,
+  setDoc,
+} from 'firebase/firestore';
+import {
   Card,
   CardContent,
   CardDescription,
@@ -26,6 +42,9 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useFirebase } from '@/firebase/provider';
+import { useUser } from '@/firebase/provider';
+import { useDocuments } from '@/hooks/use-documents';
 
 type DocumentType =
   | 'aadhaar'
@@ -90,6 +109,10 @@ const selfDeclarationText = [
 
 export default function DocumentsPage() {
   const { toast } = useToast();
+  const { user } = useUser();
+  const { firestore } = useFirebase();
+  const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
+  
   const [files, setFiles] = useState<Record<DocumentType, File | null>>({
     aadhaar: null,
     pan: null,
@@ -114,6 +137,18 @@ export default function DocumentsPage() {
   useEffect(() => {
     setCurrentDate(new Date().toLocaleDateString());
   }, []);
+  
+   useEffect(() => {
+    if (uploadedDocuments) {
+      const newStatus = { ...uploadStatus };
+      for (const doc of uploadedDocuments) {
+        if (documentList.some(d => d.id === doc.fileType)) {
+          newStatus[doc.fileType as DocumentType] = 'uploaded';
+        }
+      }
+      setUploadStatus(newStatus);
+    }
+  }, [uploadedDocuments]);
 
 
   const handleFileChange = (
@@ -128,49 +163,117 @@ export default function DocumentsPage() {
   };
 
   const handleUpload = async (docId: DocumentType) => {
+    if (!user || !firestore) {
+      toast({ variant: 'destructive', title: 'You must be logged in to upload documents.' });
+      return;
+    }
     const file = files[docId];
     if (!file) return;
 
     setUploadStatus((prev) => ({ ...prev, [docId]: 'uploading' }));
 
-    // In a real app, you would upload the file to a storage service (like Firebase Storage)
-    // and then save the URL to Firestore. Here we'll just simulate it.
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const storage = getStorage();
+    const storageRef = ref(storage, `documents/${user.uid}/${docId}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
 
-    const isSuccess = Math.random() > 0.1;
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        // Optional: handle progress
+      },
+      (error) => {
+        console.error('Upload error:', error);
+        setUploadStatus((prev) => ({ ...prev, [docId]: 'error' }));
+        toast({
+          variant: 'destructive',
+          title: 'Upload Failed',
+          description: `Could not upload ${documentList.find(d => d.id === docId)?.name}. Please try again.`,
+        });
+      },
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-    if (isSuccess) {
-      setUploadStatus((prev) => ({ ...prev, [docId]: 'uploaded' }));
-      toast({
-        title: 'Upload Successful',
-        description: `${documentList.find(d => d.id === docId)?.name} has been uploaded.`,
-      });
-      // Here you would call a function to save the document metadata to Firestore.
-      // e.g., await saveDocumentToFirestore({ userId: 'currentUserId', name: file.name, type: docId, url: 'storage_url' });
-    } else {
-      setUploadStatus((prev) => ({ ...prev, [docId]: 'error' }));
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: `Could not upload ${documentList.find(d => d.id === docId)?.name}. Please try again.`,
-      });
-    }
+          const documentsCollection = collection(firestore, 'insuranceHolders', user.uid, 'documents');
+          
+          const q = query(documentsCollection, where("fileType", "==", docId));
+          const querySnapshot = await getDocs(q);
+
+          let docRef;
+          if (!querySnapshot.empty) {
+            // Update existing document
+            docRef = querySnapshot.docs[0].ref;
+            await setDoc(docRef, {
+              fileName: file.name,
+              fileUrl: downloadURL,
+              createdAt: serverTimestamp(),
+            }, { merge: true });
+          } else {
+            // Add new document
+            await addDoc(documentsCollection, {
+              userId: user.uid,
+              fileName: file.name,
+              fileUrl: downloadURL,
+              fileType: docId,
+              createdAt: serverTimestamp(),
+            });
+          }
+
+          setUploadStatus((prev) => ({ ...prev, [docId]: 'uploaded' }));
+          toast({
+            title: 'Upload Successful',
+            description: `${documentList.find(d => d.id === docId)?.name} has been uploaded.`,
+          });
+        } catch (error) {
+           console.error('Firestore error:', error);
+           setUploadStatus((prev) => ({ ...prev, [docId]: 'error' }));
+           toast({
+             variant: 'destructive',
+             title: 'Save Failed',
+             description: `Could not save document details. Please try again.`,
+           });
+        }
+      }
+    );
   };
   
     const handleDeclarationSubmit = async () => {
+         if (!user || !firestore) {
+          toast({ variant: 'destructive', title: 'You must be logged in.' });
+          return;
+        }
         setUploadStatus((prev) => ({ ...prev, self_declaration: 'uploading' }));
-        await new Promise((resolve) => setTimeout(resolve, 1500));
         
-        const isSuccess = Math.random() > 0.1;
+        try {
+            const documentsCollection = collection(firestore, 'insuranceHolders', user.uid, 'documents');
+            const docId = 'self_declaration';
 
-        if (isSuccess) {
+            const q = query(documentsCollection, where("fileType", "==", docId));
+            const querySnapshot = await getDocs(q);
+            
+            const dataToSave = {
+                userId: user.uid,
+                fileName: 'Self-Declaration',
+                fileUrl: '', // No file for declaration
+                fileType: docId,
+                createdAt: serverTimestamp(),
+                consentGiven: true,
+            };
+
+            if (!querySnapshot.empty) {
+                const docRef = querySnapshot.docs[0].ref;
+                await setDoc(docRef, dataToSave, { merge: true });
+            } else {
+                await addDoc(documentsCollection, dataToSave);
+            }
+
             setUploadStatus((prev) => ({ ...prev, self_declaration: 'uploaded' }));
             toast({
                 title: 'Declaration Submitted',
                 description: 'Your self-declaration has been recorded.',
             });
-            // Here you would save the declaration consent to Firestore.
-        } else {
+        } catch (error) {
+            console.error('Firestore error:', error);
             setUploadStatus((prev) => ({ ...prev, self_declaration: 'error' }));
             toast({
                 variant: 'destructive',
@@ -253,7 +356,7 @@ export default function DocumentsPage() {
                                 </>
                              ) : (
                                  <p className="text-sm text-green-600 font-medium mt-2">
-                                    Declaration submitted on {currentDate}.
+                                    Declaration submitted.
                                 </p>
                              )}
 
@@ -277,7 +380,9 @@ export default function DocumentsPage() {
                         <p className="text-sm text-primary mt-1">{files[doc.id]?.name}</p>
                      )}
                      {uploadStatus[doc.id] === 'uploaded' && (
-                        <p className="text-sm text-green-600 font-medium mt-1">Uploaded: {files[doc.id]?.name}</p>
+                        <p className="text-sm text-green-600 font-medium mt-1">
+                           Uploaded: {uploadedDocuments?.find(d => d.fileType === doc.id)?.fileName || files[doc.id]?.name}
+                        </p>
                      )}
                 </div>
                 <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
@@ -295,7 +400,7 @@ export default function DocumentsPage() {
                   </Button>
                   <Button
                     onClick={() => handleUpload(doc.id)}
-                    disabled={!files[doc.id] || uploadStatus[doc.id] === 'uploading' || uploadStatus[doc.id] === 'uploaded'}
+                    disabled={!files[doc.id] || uploadStatus[doc.id] === 'uploading'}
                     className="flex-1"
                   >
                     {uploadStatus[doc.id] === 'uploading' ? (
@@ -314,3 +419,5 @@ export default function DocumentsPage() {
     </Card>
   );
 }
+
+    

@@ -46,6 +46,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Claim } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import React from 'react';
+import Link from 'next/link';
 
 const VerificationIndicator = ({
   status,
@@ -182,16 +183,20 @@ export default function ClaimReviewPage({ params }: { params: { id: string } }) 
                 <TableBody>
                   {claim.documents.map((doc) => (
                     <TableRow key={doc.id}>
-                      <TableCell className="font-medium text-primary hover:underline cursor-pointer">
-                        {doc.name}
+                      <TableCell className="font-medium">
+                        <Link href={doc.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                            {doc.name}
+                        </Link>
                       </TableCell>
                       <TableCell>{doc.type}</TableCell>
                       <TableCell>
                         {new Date(doc.uploadDate).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon">
-                          <FileDown className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" asChild>
+                           <Link href={doc.url} target="_blank" rel="noopener noreferrer">
+                                <FileDown className="h-4 w-4" />
+                           </Link>
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -319,3 +324,5 @@ export default function ClaimReviewPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+
+    
