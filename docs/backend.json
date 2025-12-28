@@ -1,0 +1,516 @@
+{
+  "entities": {
+    "InsuranceHolder": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InsuranceHolder",
+      "type": "object",
+      "description": "Represents an insurance holder in the Suraksha Kavach platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the insurance holder."
+        },
+        "mobileNumber": {
+          "type": "string",
+          "description": "The insurance holder's mobile number (used for OTP verification)."
+        },
+        "aadhaarLast4Digits": {
+          "type": "string",
+          "description": "Last 4 digits of the insurance holder's Aadhaar number (for verification purposes only)."
+        },
+        "aadhaarVerificationReferenceId": {
+          "type": "string",
+          "description": "Reference ID for Aadhaar verification."
+        },
+        "identityDocumentUrl": {
+          "type": "string",
+          "description": "URL to the uploaded identity document (e.g., PAN card, driver's license)."
+        },
+        "insurancePolicyDetailsUrl": {
+          "type": "string",
+          "description": "URL to the uploaded insurance policy details document."
+        },
+        "trustScore": {
+          "type": "number",
+          "description": "Dynamic trust score of the insurance holder (0-100)."
+        },
+        "emergencyNomineeId": {
+          "type": "string",
+          "description": "Reference to EmergencyNominee. (Relationship: InsuranceHolder 1:1 EmergencyNominee)"
+        },
+        "consentPreferences": {
+          "type": "string",
+          "description": "Insurance Holder consent preferences."
+        }
+      },
+      "required": [
+        "id",
+        "mobileNumber",
+        "aadhaarLast4Digits",
+        "aadhaarVerificationReferenceId"
+      ]
+    },
+    "Hospital": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Hospital",
+      "type": "object",
+      "description": "Represents a hospital in the Suraksha Kavach platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the hospital."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the hospital."
+        },
+        "trustScore": {
+          "type": "number",
+          "description": "Dynamic trust score of the hospital (0-100)."
+        },
+        "activeAdmissions": {
+          "type": "array",
+          "description": "List of active patient admissions in the hospital.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "InsuranceCompany": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InsuranceCompany",
+      "type": "object",
+      "description": "Represents an insurance company in the Suraksha Kavach platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the insurance company."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the insurance company."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Claim": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Claim",
+      "type": "object",
+      "description": "Represents an insurance claim in the Suraksha Kavach platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the claim."
+        },
+        "insuranceHolderId": {
+          "type": "string",
+          "description": "Reference to InsuranceHolder. (Relationship: InsuranceHolder 1:N Claim)"
+        },
+        "hospitalId": {
+          "type": "string",
+          "description": "Reference to Hospital. (Relationship: Hospital 1:N Claim)"
+        },
+        "insuranceCompanyId": {
+          "type": "string",
+          "description": "Reference to InsuranceCompany. (Relationship: InsuranceCompany 1:N Claim)"
+        },
+        "claimAmount": {
+          "type": "number",
+          "description": "The amount of the claim."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the claim (e.g., pending, approved, rejected, manual review)."
+        },
+        "approvalReason": {
+          "type": "string",
+          "description": "Reason for claim approval or rejection (AI-generated)."
+        },
+        "medicalRecordIds": {
+          "type": "array",
+          "description": "References to MedicalRecords. (Relationship: Claim 1:N MedicalRecord)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "insuranceHolderId",
+        "hospitalId",
+        "insuranceCompanyId",
+        "claimAmount",
+        "status"
+      ]
+    },
+    "MedicalRecord": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MedicalRecord",
+      "type": "object",
+      "description": "Represents a medical record (e.g., X-ray, MRI, blood reports) associated with a claim.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the medical record."
+        },
+        "claimId": {
+          "type": "string",
+          "description": "Reference to Claim. (Relationship: Claim 1:N MedicalRecord)"
+        },
+        "recordType": {
+          "type": "string",
+          "description": "Type of medical record (e.g., X-ray, MRI, blood report)."
+        },
+        "recordUrl": {
+          "type": "string",
+          "description": "URL to the medical record document."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the medical record was uploaded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "claimId",
+        "recordType",
+        "recordUrl",
+        "timestamp"
+      ]
+    },
+    "Doctor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Doctor",
+      "type": "object",
+      "description": "Represents a doctor associated with a hospital.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the doctor."
+        },
+        "hospitalId": {
+          "type": "string",
+          "description": "Reference to Hospital. (Relationship: Hospital 1:N Doctor)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the doctor."
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of the doctor (e.g., surgeon, physician)."
+        }
+      },
+      "required": [
+        "id",
+        "hospitalId",
+        "name",
+        "role"
+      ]
+    },
+    "EmergencyNominee": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "EmergencyNominee",
+      "type": "object",
+      "description": "Represents an emergency nominee for an insurance holder.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the emergency nominee."
+        },
+        "insuranceHolderId": {
+          "type": "string",
+          "description": "Reference to InsuranceHolder. (Relationship: InsuranceHolder 1:1 EmergencyNominee)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the emergency nominee."
+        },
+        "mobileNumber": {
+          "type": "string",
+          "description": "Mobile number of the emergency nominee."
+        },
+        "relationship": {
+          "type": "string",
+          "description": "Relationship to the insurance holder."
+        }
+      },
+      "required": [
+        "id",
+        "insuranceHolderId",
+        "name",
+        "mobileNumber",
+        "relationship"
+      ]
+    },
+    "Bill": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Bill",
+      "type": "object",
+      "description": "Represents a bill associated with a claim.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the bill."
+        },
+        "claimId": {
+          "type": "string",
+          "description": "Reference to Claim. (Relationship: Claim 1:N Bill)"
+        },
+        "hospitalId": {
+          "type": "string",
+          "description": "Reference to Hospital. (Relationship: Hospital 1:N Bill)"
+        },
+        "billUrl": {
+          "type": "string",
+          "description": "URL to the bill document."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the bill."
+        }
+      },
+      "required": [
+        "id",
+        "claimId",
+        "hospitalId",
+        "billUrl",
+        "amount"
+      ]
+    },
+    "AuditLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AuditLog",
+      "type": "object",
+      "description": "Represents an audit log entry for tracking access, approvals, and modifications.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the audit log entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Identifier of the user who performed the action."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the action was performed.",
+          "format": "date-time"
+        },
+        "action": {
+          "type": "string",
+          "description": "Description of the action performed (e.g., 'claim approved', 'document accessed')."
+        },
+        "entityType": {
+          "type": "string",
+          "description": "Type of entity affected by the action (e.g., 'Claim', 'MedicalRecord')."
+        },
+        "entityId": {
+          "type": "string",
+          "description": "Identifier of the entity affected by the action."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "timestamp",
+        "action",
+        "entityType",
+        "entityId"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/insuranceHolders/{insuranceHolderId}",
+        "definition": {
+          "entityName": "InsuranceHolder",
+          "schema": {
+            "$ref": "#/backend/entities/InsuranceHolder"
+          },
+          "description": "Stores insurance holder data. Includes denormalized data if other collections require it.",
+          "params": [
+            {
+              "name": "insuranceHolderId",
+              "description": "The unique identifier for the insurance holder."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/hospitals/{hospitalId}",
+        "definition": {
+          "entityName": "Hospital",
+          "schema": {
+            "$ref": "#/backend/entities/Hospital"
+          },
+          "description": "Stores hospital data.",
+          "params": [
+            {
+              "name": "hospitalId",
+              "description": "The unique identifier for the hospital."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/insuranceCompanies/{insuranceCompanyId}",
+        "definition": {
+          "entityName": "InsuranceCompany",
+          "schema": {
+            "$ref": "#/backend/entities/InsuranceCompany"
+          },
+          "description": "Stores insurance company data.",
+          "params": [
+            {
+              "name": "insuranceCompanyId",
+              "description": "The unique identifier for the insurance company."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/insuranceHolders/{insuranceHolderId}/claims/{claimId}",
+        "definition": {
+          "entityName": "Claim",
+          "schema": {
+            "$ref": "#/backend/entities/Claim"
+          },
+          "description": "Stores claim data associated with an insurance holder.  Authorization independence is ensured by having all details required for approval decisions present in this document.",
+          "params": [
+            {
+              "name": "insuranceHolderId",
+              "description": "The unique identifier for the insurance holder."
+            },
+            {
+              "name": "claimId",
+              "description": "The unique identifier for the claim."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/insuranceHolders/{insuranceHolderId}/claims/{claimId}/medicalRecords/{medicalRecordId}",
+        "definition": {
+          "entityName": "MedicalRecord",
+          "schema": {
+            "$ref": "#/backend/entities/MedicalRecord"
+          },
+          "description": "Stores medical records associated with a claim.",
+          "params": [
+            {
+              "name": "insuranceHolderId",
+              "description": "The unique identifier for the insurance holder."
+            },
+            {
+              "name": "claimId",
+              "description": "The unique identifier for the claim."
+            },
+            {
+              "name": "medicalRecordId",
+              "description": "The unique identifier for the medical record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/hospitals/{hospitalId}/doctors/{doctorId}",
+        "definition": {
+          "entityName": "Doctor",
+          "schema": {
+            "$ref": "#/backend/entities/Doctor"
+          },
+          "description": "Stores doctor information associated with a hospital.",
+          "params": [
+            {
+              "name": "hospitalId",
+              "description": "The unique identifier for the hospital."
+            },
+            {
+              "name": "doctorId",
+              "description": "The unique identifier for the doctor."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/insuranceHolders/{insuranceHolderId}/emergencyNominee/{emergencyNomineeId}",
+        "definition": {
+          "entityName": "EmergencyNominee",
+          "schema": {
+            "$ref": "#/backend/entities/EmergencyNominee"
+          },
+          "description": "Stores emergency nominee information for an insurance holder.",
+          "params": [
+            {
+              "name": "insuranceHolderId",
+              "description": "The unique identifier for the insurance holder."
+            },
+            {
+              "name": "emergencyNomineeId",
+              "description": "The unique identifier for the emergency nominee."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/insuranceHolders/{insuranceHolderId}/claims/{claimId}/bills/{billId}",
+        "definition": {
+          "entityName": "Bill",
+          "schema": {
+            "$ref": "#/backend/entities/Bill"
+          },
+          "description": "Stores bills associated with a claim.",
+          "params": [
+            {
+              "name": "insuranceHolderId",
+              "description": "The unique identifier for the insurance holder."
+            },
+            {
+              "name": "claimId",
+              "description": "The unique identifier for the claim."
+            },
+            {
+              "name": "billId",
+              "description": "The unique identifier for the bill."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/auditLogs/{auditLogId}",
+        "definition": {
+          "entityName": "AuditLog",
+          "schema": {
+            "$ref": "#/backend/entities/AuditLog"
+          },
+          "description": "Stores audit log entries for tracking access and modifications.",
+          "params": [
+            {
+              "name": "auditLogId",
+              "description": "The unique identifier for the audit log entry."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support Suraksha Kavach's requirements for secure, scalable, and debuggable claims processing. The design prioritizes authorization independence, clarity, and QAPs. Authorization Independence is achieved via denormalization of data required for claim approvals (Hospital and InsuranceHolder trust scores). Structural Segregation (Homogeneous Security Posture) dictates separation of concerns (e.g., `/insuranceHolders/{insuranceHolderId}` vs. `/hospitals/{hospitalId}`). Access Modeling principles are used for standardizing patterns (ownership via paths and membership maps where applicable).\n\nTo enable QAPs, the system uses segregation to ensure that listing operations are always secure. For instance, listing claims is restricted to authorized users within the `/insuranceHolders/{insuranceHolderId}/claims/{claimId}` hierarchy. The trust score is central to access control and claim approvals. The structure also facilitates the emergency surgery-first protocol by allowing for immediate treatment approval based on trust scores. It supports AI-driven anomaly detection and provides comprehensive audit trails by segregating audit data into a specific collection."
+  }
+}

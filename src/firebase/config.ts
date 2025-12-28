@@ -1,4 +1,8 @@
-// This file is not used in the current setup.
-// The configuration is handled directly in the FirebaseClientProvider.
-// This file is kept for potential future use cases.
-export {};
+export const firebaseConfig = {
+  "projectId": "studio-3188130158-ae9bd",
+  "appId": "1:464010366816:web:bdba82d0abc1edcb975805",
+  "apiKey": "AIzaSyBClfAUQ-o_v0M55INKzhplgrMtJ3E90cU",
+  "authDomain": "studio-3188130158-ae9bd.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "464010366816"
+};

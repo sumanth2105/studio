@@ -1,0 +1,200 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model for all sensitive data.
+ * All personally identifiable information, claims, and related documents are nested under a
+ * path specific to the insurance holder, ensuring that only the authenticated owner of that data
+ * can access or modify it. Publicly accessible information, such as lists of hospitals and
+ * insurance companies, is read-only for any authenticated user, preventing unauthorized modification.
+ *
+ * Data Structure: The data is organized hierarchically. Core user data resides in
+ * `/insuranceHolders/{insuranceHolderId}`, with all related sensitive sub-collections like
+ * `claims`, `bills`, and `medicalRecords` nested underneath. This structure provides a clear
+ * and secure boundary for user-owned data. General-purpose data like `/hospitals` and
+ * `/insuranceCompanies`, and system-level data like `/auditLogs`, are stored in top-level
+ * collections.
+ *
+ * Key Security Decisions:
+ * - Strict Ownership: All data under `/insuranceHolders/{userId}` is strictly controlled by that user.
+ *   There is no concept of shared access or roles for other users in this prototyping model.
+ * - Public Data is Read-Only: Collections like `/hospitals` and `/insuranceCompanies` can be read by
+ *   any signed-in user but cannot be modified by clients. This assumes they are managed by a trusted backend.
+ * - Append-Only Audit Trail: The `/auditLogs` collection is write-only for clients. Any authenticated
+ *   user can create a log entry (e.g., to record an action they took), but they cannot read, update, or
+ *   delete any logs, protecting the integrity of the audit trail.
+ * - No User Listing: It is not possible for a client to list all `insuranceHolders` in the system.
+ *
+ * Denormalization for Authorization: The rules rely on the `insuranceHolderId` being present
+ * both in the document path and as a field within the documents of user-owned subcollections (e.g., `Claim`).
+ * This allows for simple, fast, and secure validation (`request.resource.data.insuranceHolderId == insuranceHolderId`)
+ * without needing extra database reads.
+ *
+ * Structural Segregation: User-private data (`/insuranceHolders`) is completely separate from public-read
+ * data (`/hospitals`), which enables simpler and more performant security rules for listing operations.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------
+    // Helper Functions
+    // --------------------------------
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the primary function for verifying document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * A robust check for update/delete operations, ensuring the user is the owner
+     * AND the document they are trying to modify actually exists.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // --------------------------------
+    // Top-Level Collections
+    // --------------------------------
+
+    /**
+     * @description Controls access to the primary document for an insurance holder.
+     * @path /insuranceHolders/{insuranceHolderId}
+     * @allow (get) An authenticated user with UID 'user_abc' retrieves their own profile at '/insuranceHolders/user_abc'.
+     * @allow (create) A new user with UID 'user_xyz' signs up and creates their profile at '/insuranceHolders/user_xyz'.
+     * @deny (list) A user attempts to get a list of all insurance holders at '/insuranceHolders'.
+     * @deny (get) A user 'user_abc' tries to read the profile of 'user_xyz'.
+     * @principle Restricts access to a user's own data tree and enforces self-creation.
+     */
+    match /insuranceHolders/{insuranceHolderId} {
+      allow get: if isOwner(insuranceHolderId);
+      allow list: if false;
+      allow create: if isOwner(insuranceHolderId) && request.resource.data.id == insuranceHolderId;
+      allow update: if isExistingOwner(insuranceHolderId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(insuranceHolderId);
+
+      /**
+       * @description Controls access to an insurance holder's claims.
+       * @path /insuranceHolders/{insuranceHolderId}/claims/{claimId}
+       * @allow (list) User 'user_abc' lists all their claims under '/insuranceHolders/user_abc/claims'.
+       * @allow (create) User 'user_abc' creates a new claim with `insuranceHolderId: 'user_abc'` in the document body.
+       * @deny (get) User 'user_xyz' tries to read a claim belonging to 'user_abc'.
+       * @principle Enforces document ownership for all operations based on the parent path.
+       */
+      match /claims/{claimId} {
+        allow get, list: if isOwner(insuranceHolderId);
+        allow create: if isOwner(insuranceHolderId) && request.resource.data.insuranceHolderId == insuranceHolderId;
+        allow update: if isExistingOwner(insuranceHolderId) && request.resource.data.insuranceHolderId == resource.data.insuranceHolderId;
+        allow delete: if isExistingOwner(insuranceHolderId);
+
+        /**
+         * @description Controls access to medical records associated with a specific claim.
+         * @path /insuranceHolders/{insuranceHolderId}/claims/{claimId}/medicalRecords/{medicalRecordId}
+         * @allow (list) User 'user_abc' lists medical records for their own claim.
+         * @deny (get) User 'user_xyz' attempts to get a medical record from a claim owned by 'user_abc'.
+         * @principle Inherits ownership from the grandparent path, securing nested sensitive data.
+         */
+        match /medicalRecords/{medicalRecordId} {
+          allow get, list: if isOwner(insuranceHolderId);
+          allow create: if isOwner(insuranceHolderId) && request.resource.data.claimId == claimId;
+          allow update: if isExistingOwner(insuranceHolderId);
+          allow delete: if isExistingOwner(insuranceHolderId);
+        }
+
+        /**
+         * @description Controls access to bills associated with a specific claim.
+         * @path /insuranceHolders/{insuranceHolderId}/claims/{claimId}/bills/{billId}
+         * @allow (create) User 'user_abc' adds a new bill to their own claim.
+         * @deny (list) User 'user_xyz' attempts to list bills from a claim owned by 'user_abc'.
+         * @principle Inherits ownership from the grandparent path, securing nested financial data.
+         */
+        match /bills/{billId} {
+          allow get, list: if isOwner(insuranceHolderId);
+          allow create: if isOwner(insuranceHolderId) && request.resource.data.claimId == claimId;
+          allow update: if isExistingOwner(insuranceHolderId);
+          allow delete: if isExistingOwner(insuranceHolderId);
+        }
+      }
+
+      /**
+       * @description Controls access to an insurance holder's emergency nominee.
+       * @path /insuranceHolders/{insuranceHolderId}/emergencyNominee/{emergencyNomineeId}
+       * @allow (get) User 'user_abc' retrieves their own emergency nominee details.
+       * @deny (create) User 'user_xyz' tries to add an emergency nominee for 'user_abc'.
+       * @principle Enforces document ownership based on the parent path.
+       */
+      match /emergencyNominee/{emergencyNomineeId} {
+        allow get, list: if isOwner(insuranceHolderId);
+        allow create: if isOwner(insuranceHolderId) && request.resource.data.insuranceHolderId == insuranceHolderId;
+        allow update: if isExistingOwner(insuranceHolderId) && request.resource.data.insuranceHolderId == resource.data.insuranceHolderId;
+        allow delete: if isExistingOwner(insuranceHolderId);
+      }
+    }
+
+    /**
+     * @description Provides read-only access to hospital information for all authenticated users.
+     * @path /hospitals/{hospitalId}
+     * @allow (list) Any signed-in user can list all available hospitals.
+     * @deny (create) A regular user attempts to add a new hospital to the system.
+     * @principle Secures public reference data by making it read-only for clients, assuming a backend manages writes.
+     */
+    match /hospitals/{hospitalId} {
+      allow get, list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+
+      /**
+       * @description Provides read-only access to doctor information for a specific hospital.
+       * @path /hospitals/{hospitalId}/doctors/{doctorId}
+       * @allow (get) Any signed-in user can view the profile of a doctor at a given hospital.
+       * @deny (update) A regular user attempts to change a doctor's role.
+       * @principle Secures public reference data by making it read-only for clients.
+       */
+      match /doctors/{doctorId} {
+        allow get, list: if isSignedIn();
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+
+    /**
+     * @description Provides read-only access to insurance company information for all authenticated users.
+     * @path /insuranceCompanies/{insuranceCompanyId}
+     * @allow (get) Any signed-in user can look up an insurance company's details.
+     * @deny (create) A regular user attempts to add a new insurance company.
+     * @principle Secures public reference data by making it read-only for clients, assuming a backend manages writes.
+     */
+    match /insuranceCompanies/{insuranceCompanyId} {
+      allow get, list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description An append-only collection for audit logs. Any signed-in user can write to it, but no one can read or modify entries.
+     * @path /auditLogs/{auditLogId}
+     * @allow (create) Any authenticated user 'user_abc' can create a log entry, provided the `userId` field is 'user_abc'.
+     * @deny (get) A user attempts to read any audit log entry.
+     * @deny (update) A user attempts to modify an existing log entry.
+     * @principle Protects the integrity of the audit trail by making it write-only from the client.
+     */
+    match /auditLogs/{auditLogId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
