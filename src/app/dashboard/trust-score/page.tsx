@@ -47,7 +47,7 @@ const documentListForCheck: {
 export default function TrustScorePage() {
   const [scoreResult, setScoreResult] =
     React.useState<CalculateTrustScoreOutput | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   const { user } = useUser();
@@ -103,13 +103,6 @@ export default function TrustScorePage() {
     }
   }, [isLoadingDocuments, uploadedDocuments]);
 
-  React.useEffect(() => {
-    // Initial fetch when the component mounts and documents are loaded
-    if(user && !isLoadingDocuments) {
-      fetchScore();
-    }
-  }, [user, isLoadingDocuments, fetchScore]);
-
   const getCategoryChipColor = (category?: string) => {
     switch (category) {
       case 'Highly Trusted':
@@ -126,7 +119,7 @@ export default function TrustScorePage() {
   };
 
   const renderContent = () => {
-    if (isLoading || isLoadingDocuments) {
+    if (isLoading) {
       return (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -148,8 +141,10 @@ export default function TrustScorePage() {
 
     if (!scoreResult) {
       return (
-        <CardContent>
-          <p>No score data available. Please try recalculating.</p>
+         <CardContent>
+            <div className="flex flex-col items-center justify-center h-64 text-center">
+                <p className="text-muted-foreground mb-4">Click the button below to calculate your latest trust score.</p>
+            </div>
         </CardContent>
       );
     }
@@ -227,6 +222,14 @@ export default function TrustScorePage() {
           </CardDescription>
         </CardHeader>
         {renderContent()}
+         {(isLoading || scoreResult) && (
+          <CardFooter className="justify-center">
+            <Button onClick={fetchScore} disabled={isLoading}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Recalculate Score
+            </Button>
+        </CardFooter>
+        )}
       </Card>
     </div>
   );
