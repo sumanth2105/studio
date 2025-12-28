@@ -82,12 +82,12 @@ const prompt = ai.definePrompt({
 
   The score should be between 20 and 90.
 
-  Analyze the data holistically. The weightage of factors is as follows:
-  - Identity & Document Verification: High Importance. Completeness here is a strong positive signal. Especially consider if 'uploadedRequiredDocuments' is true.
-  - Payment History & Delays: High Importance. A 'premiumOverdueDays' greater than 30 is a significant negative factor. Consistent on-time payments boost the score.
-  - Policy Health & Tenure: Medium Importance. A long-standing, active policy is favorable.
-  - Claim History: Medium Importance. A low number of claims, especially rejected ones, is positive.
-  - Fraud Indicators: Critical Importance. Any positive fraud indicators should heavily penalize the score.
+  Analyze the data holistically.
+  - Completeness of document verification is a strong positive signal.
+  - A premium overdue by more than 30 days is a significant negative factor.
+  - A long-standing, active policy is favorable.
+  - A low number of claims, especially rejected ones, is positive.
+  - Any positive fraud indicators should heavily penalize the score.
 
   **IMPORTANT FINAL RULE:** The final calculated score must NOT exceed 85. If your initial score calculation is higher than 85, cap it at 85.
 
@@ -99,7 +99,7 @@ const prompt = ai.definePrompt({
   **Your Task:**
   1.  Calculate a final Trust Score (20-90, capped at 85).
   2.  Categorize the score: 80-85 (Highly Trusted), 60-79 (Trusted), 40-59 (Moderate Risk), <40 (High Risk).
-  3.  Provide a concise, user-friendly explanation with 3-5 bullet points. For each point, explain how it influenced the score based on its weightage (e.g., "Your complete document verification significantly boosted your score due to its high importance.").
+  3.  Provide a concise, user-friendly explanation with 3-5 bullet points on the key factors.
   4.  Offer 2-3 actionable suggestions for score improvement.
   `,
 });
@@ -120,3 +120,4 @@ const calculateTrustScoreFlow = ai.defineFlow(
     return output!;
   }
 );
+
