@@ -115,6 +115,11 @@ function LoginComponent() {
     try {
       await signInAnonymously(auth);
       localStorage.setItem('userRole', role);
+      
+      toast({
+        title: 'Logged In Successfully!',
+        description: 'You are now authenticated and being redirected to the dashboard.',
+      });
 
       switch (role) {
         case 'holder':
@@ -416,7 +421,7 @@ function LoginComponent() {
                             Proceed
                         </Button>
                         <Button variant="link" onClick={() => setIsSigningUp(false)}>
-                            Already have an account? Sign In
+                            Already have an account? Log In
                         </Button>
                     </CardFooter>
                 </form>
@@ -511,7 +516,7 @@ function LoginComponent() {
             <CardFooter className="flex-col items-start gap-4">
                 <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign In
+                    Log In
                 </Button>
                  <Button variant="link" className="w-full" onClick={() => setIsSigningUp(true)}>
                     Don't have an account? Sign Up
@@ -583,7 +588,7 @@ function LoginComponent() {
               <CardFooter className="flex-col items-start gap-4">
                 <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign In
+                    Log In
                 </Button>
                 <Alert variant="default" className="w-full text-sm">
                     <KeyRound className="h-4 w-4" />
@@ -616,7 +621,7 @@ function LoginComponent() {
               <CardFooter className="flex-col items-start gap-4">
                 <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign In
+                    Log In
                 </Button>
                 <Alert variant="default" className="w-full text-sm">
                     <KeyRound className="h-4 w-4" />
@@ -641,5 +646,3 @@ export default function LoginPage() {
         </FirebaseClientProvider>
     )
 }
-
-    
