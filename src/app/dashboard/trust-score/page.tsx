@@ -177,13 +177,6 @@ export default function TrustScorePage() {
           </div>
         </CardContent>
         
-        <CardFooter className="justify-center">
-            <Button onClick={fetchScore} disabled={isLoading}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Recalculate Score
-            </Button>
-        </CardFooter>
-
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -222,14 +215,12 @@ export default function TrustScorePage() {
           </CardDescription>
         </CardHeader>
         {renderContent()}
-         {(isLoading || scoreResult) && (
-          <CardFooter className="justify-center">
+         <CardFooter className="justify-center pt-6">
             <Button onClick={fetchScore} disabled={isLoading}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Recalculate Score
+                {scoreResult ? 'Recalculate Score' : 'Calculate Score'}
             </Button>
         </CardFooter>
-        )}
       </Card>
     </div>
   );
