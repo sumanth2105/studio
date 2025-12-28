@@ -45,6 +45,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useAuth } from '@/firebase';
+import { signInAnonymously } from 'firebase/auth';
 
 
 const signUpSchema = z.object({
@@ -75,6 +77,7 @@ type OtpFormValues = z.infer<typeof otpSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
   const [role, setRole] = useState<UserRole>('holder');
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [signUpStep, setSignUpStep] = useState<'details' | 'otp' | 'success'>('details');
@@ -103,19 +106,28 @@ export default function LoginPage() {
     resolver: zodResolver(otpSchema),
   });
 
-  const handleLogin = () => {
-    localStorage.setItem('userRole', role);
+  const handleLogin = async () => {
+    setIsLoading(true);
+    try {
+      await signInAnonymously(auth);
+      localStorage.setItem('userRole', role);
 
-    switch (role) {
-      case 'holder':
-        router.push('/dashboard');
-        break;
-      case 'hospital':
-        router.push('/dashboard/hospital');
-        break;
-      case 'insurer':
-        router.push('/dashboard/insurer');
-        break;
+      switch (role) {
+        case 'holder':
+          router.push('/dashboard');
+          break;
+        case 'hospital':
+          router.push('/dashboard/hospital');
+          break;
+        case 'insurer':
+          router.push('/dashboard/insurer');
+          break;
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      setErrorMessage("Anonymous sign-in failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -484,9 +496,19 @@ export default function LoginPage() {
                 <Label htmlFor="holder-password">Password</Label>
                 <Input id="holder-password" type="password" defaultValue={demoCredentials.holder.password}/>
                 </div>
+                 {errorMessage && (
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Login Failed</AlertTitle>
+                        <AlertDescription>{errorMessage}</AlertDescription>
+                    </Alert>
+                )}
             </CardContent>
             <CardFooter className="flex-col items-start gap-4">
-                <Button className="w-full" onClick={handleLogin}>Sign In</Button>
+                <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sign In
+                </Button>
                  <Button variant="link" className="w-full" onClick={() => setIsSigningUp(true)}>
                     Don't have an account? Sign Up
                 </Button>
@@ -555,7 +577,10 @@ export default function LoginPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-start gap-4">
-                <Button className="w-full" onClick={handleLogin}>Sign In</Button>
+                <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sign In
+                </Button>
                 <Alert variant="default" className="w-full text-sm">
                     <KeyRound className="h-4 w-4" />
                     <AlertTitle>Demo Credentials</AlertTitle>
@@ -585,7 +610,10 @@ export default function LoginPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-start gap-4">
-                <Button className="w-full" onClick={handleLogin}>Sign In</Button>
+                <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sign In
+                </Button>
                 <Alert variant="default" className="w-full text-sm">
                     <KeyRound className="h-4 w-4" />
                     <AlertTitle>Demo Credentials</AlertTitle>
