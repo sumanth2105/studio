@@ -74,7 +74,7 @@ const otpSchema = z.object({
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 type OtpFormValues = z.infer<typeof otpSchema>;
 
-export default function LoginPage() {
+function LoginComponent() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
@@ -107,6 +107,10 @@ export default function LoginPage() {
   });
 
   const handleLogin = async () => {
+    if (!auth) {
+        setErrorMessage("Authentication service is not available. Please try again later.");
+        return;
+    }
     setIsLoading(true);
     try {
       await signInAnonymously(auth);
@@ -630,4 +634,10 @@ export default function LoginPage() {
   );
 }
 
-    
+export default function LoginPage() {
+    return (
+        <FirebaseClientProvider>
+            <LoginComponent />
+        </FirebaseClientProvider>
+    )
+}
