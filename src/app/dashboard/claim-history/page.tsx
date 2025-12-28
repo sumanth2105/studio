@@ -217,6 +217,7 @@ export default function ClaimHistoryPage() {
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Submission Date</TableHead>
+                <TableHead>Details</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -239,13 +240,14 @@ export default function ClaimHistoryPage() {
                     <TableCell>
                       {new Date(claim.submissionDate).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-right flex justify-end items-center gap-2">
-                      <Button variant="outline" size="sm" asChild>
+                    <TableCell>
+                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/dashboard/claims/${claim.id}`}>
-                          View
-                          <ArrowRight className="h-3 w-3 ml-2" />
+                          View Details
                         </Link>
                       </Button>
+                    </TableCell>
+                    <TableCell className="text-right flex justify-end items-center gap-2">
                       <Button variant="ghost" size="icon" title="Download PDF">
                         <Download className="h-4 w-4" />
                         <span className="sr-only">Download PDF</span>
@@ -255,7 +257,7 @@ export default function ClaimHistoryPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     No results found.
                   </TableCell>
                 </TableRow>
