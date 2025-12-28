@@ -75,6 +75,7 @@ const claimSchema = z.object({
     required_error: 'Treatment type is required.',
   }),
   estimatedCost: z.coerce.number().positive('Estimated cost must be a positive number.'),
+  maxSurgeryStartTime: z.string().optional(),
   admissionNote: z.any().refine(file => file?.length == 1, 'Admission note is required.'),
   doctorDiagnosis: z.any().refine(file => file?.length == 1, 'Doctor diagnosis is required.'),
   medicalReports: z.any().refine(file => file?.length > 0, 'At least one medical report is required.'),
@@ -470,6 +471,22 @@ export default function VerifyPatientPage() {
                                         <Input
                                             type="number"
                                             placeholder="e.g., 150000"
+                                            {...field}
+                                        />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={claimForm.control}
+                                    name="maxSurgeryStartTime"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Max time to surgery</FormLabel>
+                                        <FormControl>
+                                        <Input
+                                            placeholder="e.g., 2 hours"
                                             {...field}
                                         />
                                         </FormControl>
