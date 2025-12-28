@@ -142,13 +142,14 @@ export default function DocumentsPage() {
   
    useEffect(() => {
     if (uploadedDocuments) {
-      const newStatus = { ...uploadStatus };
-      for (const doc of uploadedDocuments) {
-        if (documentList.some(d => d.id === doc.fileType)) {
-          newStatus[doc.fileType as DocumentType] = 'uploaded';
-        }
-      }
-      setUploadStatus(newStatus);
+      setUploadStatus(prevStatus => {
+        const newStatus = { ...prevStatus };
+        documentList.forEach(docInfo => {
+            const isUploaded = uploadedDocuments.some(doc => doc.fileType === docInfo.id);
+            newStatus[docInfo.id] = isUploaded ? 'uploaded' : 'idle';
+        });
+        return newStatus;
+      });
     }
   }, [uploadedDocuments]);
 
@@ -427,5 +428,3 @@ export default function DocumentsPage() {
     </Card>
   );
 }
-
-    
