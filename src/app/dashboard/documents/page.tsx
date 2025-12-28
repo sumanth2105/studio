@@ -402,7 +402,7 @@ export default function DocumentsPage() {
                   </Button>
                   <Button
                     onClick={() => handleUpload(doc.id)}
-                    disabled={!files[docid] || uploadStatus[doc.id] === 'uploading'}
+                    disabled={!files[doc.id] || uploadStatus[doc.id] === 'uploading'}
                     className="flex-1"
                   >
                     {uploadStatus[doc.id] === 'uploading' ? (
@@ -421,5 +421,3 @@ export default function DocumentsPage() {
     </Card>
   );
 }
-
-    
