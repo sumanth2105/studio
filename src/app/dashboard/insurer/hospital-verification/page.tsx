@@ -107,7 +107,7 @@ export default function HospitalVerificationPage() {
                             {req.trustScore}
                         </span>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{req.trustScoreAnalysis}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-xs">{req.trustScoreAnalysis}</TableCell>
                     <TableCell>{req.claimsCount}</TableCell>
                      <TableCell>{(req.disputeRatio * 100).toFixed(1)}%</TableCell>
                     <TableCell className="text-right">
