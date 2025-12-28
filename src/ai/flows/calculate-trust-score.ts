@@ -74,17 +74,16 @@ const prompt = ai.definePrompt({
   name: 'calculateTrustScorePrompt',
   input: { schema: z.object({ jsonData: z.string() }) },
   output: { schema: CalculateTrustScoreOutputSchema },
-  prompt: `You are a sophisticated risk assessment engine for an insurance platform. Your task is to calculate a Trust Score for a policyholder based on the provided JSON data.
+  prompt: `You are a sophisticated risk assessment engine for an insurance platform. Your task is to analyze the provided JSON data for a policyholder and determine their Trust Score.
 
-  **Scoring Logic:**
-  1.  **Identity Verification (Max 20 pts):** Aadhaar (+8), PAN (+8), Mobile (+4).
-  2.  **Policy Health (Max 20 pts):** Active (+10), Tenure >24mo (+10), 12-24mo (+7), <12mo (+4).
-  3.  **Payment Behavior (Max 25 pts):** On-time ratio >=95% (+25), 80-94% (+18), 60-79% (+10).
-  4.  **Claim Behavior (Max 20 pts):** No rejected claims (+10), Low claim frequency (+10), Multiple rejections (-10), Suspicious frequency (-15). This section's score cannot be negative.
-  5.  **Document Completeness (Max 10 pts):** All mandatory docs (+10), Missing one (-5).
-  6.  **Fraud Penalties (Max -15 pts):** Past fraud alert (-10), Active investigation (-15).
+  Analyze the data holistically, considering factors like:
+  - Identity verification completeness (Aadhaar, PAN, etc.).
+  - Policy health (status, tenure).
+  - Payment history (on-time payments).
+  - Claim history (frequency, rejections).
+  - Fraud indicators.
 
-  **IMPORTANT FINAL RULE:** The final calculated score must NOT exceed 85. If the total score is higher than 85, it must be capped at 85.
+  **IMPORTANT FINAL RULE:** The final calculated score must NOT exceed 85. If your initial score is higher than 85, cap it at 85.
 
   **Input Data:**
   \`\`\`json
@@ -92,8 +91,8 @@ const prompt = ai.definePrompt({
   \`\`\`
 
   **Your Task:**
-  1.  Calculate the final Trust Score (0-100, capped at 85) based on the logic above.
-  2.  Categorize the score: 80-85 (Highly Trusted), 60-79 (Trusted), 40-59 (Moderate Risk), <40 (High Risk). Note the change in the 'Highly Trusted' range.
+  1.  Calculate a final Trust Score (0-100, capped at 85).
+  2.  Categorize the score: 80-85 (Highly Trusted), 60-79 (Trusted), 40-59 (Moderate Risk), <40 (High Risk).
   3.  Provide a concise, user-friendly explanation with 3-5 bullet points highlighting the main reasons for the score.
   4.  Offer 2-3 actionable suggestions for score improvement.
   `,
