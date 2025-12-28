@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Lightbulb, Loader2, AlertCircle } from 'lucide-react';
@@ -48,12 +48,6 @@ export function ClaimExplanation({ claim, holder, hospital }: ClaimExplanationPr
     }
   };
 
-  useEffect(() => {
-    // Automatically fetch explanation on component mount
-    getExplanation();
-  }, [claim.id]);
-
-
   if (isLoading) {
       return (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -85,5 +79,10 @@ export function ClaimExplanation({ claim, holder, hospital }: ClaimExplanationPr
     );
   }
 
-  return null;
+  return (
+    <Button onClick={getExplanation} disabled={isLoading}>
+        <Lightbulb className="mr-2 h-4 w-4" />
+        Generate Explanation
+    </Button>
+  );
 }

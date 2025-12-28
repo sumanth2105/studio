@@ -216,7 +216,7 @@ export default function TrustScorePage() {
         </CardHeader>
         {renderContent()}
          <CardFooter className="justify-center pt-6">
-            <Button onClick={fetchScore} disabled={isLoading}>
+            <Button onClick={fetchScore} disabled={isLoading || isLoadingDocuments}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                 {scoreResult ? 'Recalculate Score' : 'Calculate Score'}
             </Button>
