@@ -8,30 +8,41 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import {
   CheckCircle,
   TrendingUp,
   ShieldCheck,
-  ShieldBan,
-  UserCheck,
-  HeartPulse,
-  CalendarClock,
-  FileCheck,
-  FileText,
   Loader2,
   AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { mockHolder, mockClaims } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import {
   calculateTrustScore,
   type CalculateTrustScoreOutput,
 } from '@/ai/flows/calculate-trust-score';
-import { differenceInMonths } from 'date-fns';
+import { differenceInDays, differenceInMonths } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useDocuments } from '@/hooks/use-documents';
+import { useUser } from '@/firebase';
+
+// Duplicating this list to avoid circular dependencies
+const documentListForCheck: {
+  id: string;
+  name: string;
+  required?: boolean;
+}[] = [
+  { id: 'aadhaar', name: 'Aadhaar Card', required: true },
+  { id: 'pan', name: 'PAN Card' },
+  { id: 'policy', name: 'Insurance Policy Document', required: true },
+  { id: 'premium_proof', name: 'Premium Payment Proof', required: true },
+  { id: 'bank_proof', name: 'Bank Proof', required: true },
+  { id: 'self_declaration', name: 'Self-Declaration Form', required: true },
+];
 
 export default function TrustScorePage() {
   const [scoreResult, setScoreResult] =
@@ -39,44 +50,65 @@ export default function TrustScorePage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
+  const { user } = useUser();
+  const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
+
+  const fetchScore = React.useCallback(async () => {
+    if (isLoadingDocuments) return; // Wait for documents to be loaded
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const activePolicy = mockHolder.policies.find(
+        (p) => p.status === 'Active'
+      );
+
+      // Check for required documents
+      const requiredDocs = documentListForCheck.filter(d => d.required);
+      const uploadedDocTypes = new Set(uploadedDocuments?.map(d => d.fileType));
+      const allRequiredDocsUploaded = requiredDocs.every(d => uploadedDocTypes.has(d.id));
+
+      const premiumOverdueDays = activePolicy
+        ? Math.max(0, differenceInDays(new Date(), new Date(activePolicy.lastPremiumPaymentDate)) - 30)
+        : 0;
+
+      const result = await calculateTrustScore({
+        verification: {
+          ...mockHolder.verification,
+          uploadedRequiredDocuments: allRequiredDocsUploaded,
+        },
+        policy: {
+          status: activePolicy?.status || 'Inactive',
+          tenureMonths: activePolicy
+            ? differenceInMonths(new Date(), new Date(activePolicy.startDate))
+            : 0,
+          premiumOverdueDays: premiumOverdueDays,
+        },
+        paymentHistory: {
+          onTimeRatio: mockHolder.paymentHistory.onTimeRatio,
+        },
+        claimHistory: {
+          totalClaims: mockClaims.length,
+          rejectedClaims: mockClaims.filter((c) => c.status === 'Rejected')
+            .length,
+        },
+        fraudIndicators: mockHolder.fraudIndicators,
+      });
+      setScoreResult(result);
+    } catch (e) {
+      console.error(e);
+      setError('Could not calculate trust score. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoadingDocuments, uploadedDocuments]);
+
   React.useEffect(() => {
-    const fetchScore = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const activePolicy = mockHolder.policies.find(
-          (p) => p.status === 'Active'
-        );
-
-        const result = await calculateTrustScore({
-          verification: mockHolder.verification,
-          policy: {
-            status: activePolicy?.status || 'Inactive',
-            tenureMonths: activePolicy
-              ? differenceInMonths(new Date(), new Date(activePolicy.startDate))
-              : 0,
-          },
-          paymentHistory: {
-            onTimeRatio: mockHolder.paymentHistory.onTimeRatio,
-          },
-          claimHistory: {
-            totalClaims: mockClaims.length,
-            rejectedClaims: mockClaims.filter((c) => c.status === 'Rejected')
-              .length,
-          },
-          fraudIndicators: mockHolder.fraudIndicators,
-        });
-        setScoreResult(result);
-      } catch (e) {
-        console.error(e);
-        setError('Could not calculate trust score. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchScore();
-  }, []);
+    // Initial fetch when the component mounts and documents are loaded
+    if(user && !isLoadingDocuments) {
+      fetchScore();
+    }
+  }, [user, isLoadingDocuments, fetchScore]);
 
   const getCategoryChipColor = (category?: string) => {
     switch (category) {
@@ -94,7 +126,7 @@ export default function TrustScorePage() {
   };
 
   const renderContent = () => {
-    if (isLoading) {
+    if (isLoading || isLoadingDocuments) {
       return (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -117,7 +149,7 @@ export default function TrustScorePage() {
     if (!scoreResult) {
       return (
         <CardContent>
-          <p>No score data available.</p>
+          <p>No score data available. Please try recalculating.</p>
         </CardContent>
       );
     }
@@ -149,6 +181,13 @@ export default function TrustScorePage() {
             </ul>
           </div>
         </CardContent>
+        
+        <CardFooter className="justify-center">
+            <Button onClick={fetchScore} disabled={isLoading}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Recalculate Score
+            </Button>
+        </CardFooter>
 
         <Card>
           <CardHeader>

@@ -94,7 +94,8 @@ const documentList: {
   {
     id: 'self_declaration',
     name: 'Self-Declaration Form',
-    description: 'A signed self-declaration form if required.',
+    description: 'A signed self-declaration form is mandatory for trust score calculation.',
+    required: true,
   },
 ];
 
@@ -141,18 +142,21 @@ export default function DocumentsPage() {
   }, []);
   
   useEffect(() => {
-    if (user && !isLoadingDocuments) {
+    // This effect now correctly depends on `uploadedDocuments`.
+    // It will re-run whenever the list of uploaded documents changes.
+    if (user && uploadedDocuments) {
       const newStatus = { ...uploadStatus };
+      const uploadedDocTypes = new Set(uploadedDocuments.map(doc => doc.fileType));
+
       documentList.forEach(docInfo => {
-        const isUploaded = uploadedDocuments?.some(doc => doc.fileType === docInfo.id);
-        // Only update if it's not currently uploading
+        // Only update status if it's not currently in an 'uploading' state.
         if (newStatus[docInfo.id] !== 'uploading') {
-          newStatus[docInfo.id] = isUploaded ? 'uploaded' : 'idle';
+          newStatus[docInfo.id] = uploadedDocTypes.has(docInfo.id) ? 'uploaded' : 'idle';
         }
       });
       setUploadStatus(newStatus);
     }
-  }, [user, uploadedDocuments, isLoadingDocuments]);
+  }, [user, uploadedDocuments]);
 
 
   const handleFileChange = (
@@ -212,7 +216,8 @@ export default function DocumentsPage() {
               const docRef = querySnapshot.docs[0].ref;
               setDocumentNonBlocking(docRef, dataToSave, { merge: true });
             } else {
-              addDocumentNonBlocking(documentsCollection, { id: uuidv4(), ...dataToSave });
+              const newDocRef = doc(documentsCollection, uuidv4());
+              setDocumentNonBlocking(newDocRef, {id: newDocRef.id, ...dataToSave }, {});
             }
 
             setUploadStatus((prev) => ({ ...prev, [docId]: 'uploaded' }));
@@ -270,7 +275,8 @@ export default function DocumentsPage() {
                 const docRef = querySnapshot.docs[0].ref;
                 setDocumentNonBlocking(docRef, dataToSave, { merge: true });
             } else {
-                addDocumentNonBlocking(documentsCollection, { id: uuidv4(), ...dataToSave });
+                const newDocRef = doc(documentsCollection, uuidv4());
+                setDocumentNonBlocking(newDocRef, { id: newDocRef.id, ...dataToSave }, {});
             }
 
             setUploadStatus((prev) => ({ ...prev, self_declaration: 'uploaded' }));
@@ -426,5 +432,3 @@ export default function DocumentsPage() {
     </Card>
   );
 }
-
-    
