@@ -10,6 +10,10 @@
           "type": "string",
           "description": "Unique identifier for the insurance holder."
         },
+        "patientId": {
+          "type": "string",
+          "description": "Public-facing unique identifier for the patient."
+        },
         "mobileNumber": {
           "type": "string",
           "description": "The insurance holder's mobile number (used for OTP verification)."
@@ -45,6 +49,7 @@
       },
       "required": [
         "id",
+        "patientId",
         "mobileNumber",
         "aadhaarLast4Digits",
         "aadhaarVerificationReferenceId"
@@ -575,5 +580,3 @@
     "reasoning": "The Firestore data structure is designed to support Suraksha Kavach's requirements for secure, scalable, and debuggable claims processing. The design prioritizes authorization independence, clarity, and QAPs. Authorization Independence is achieved via denormalization of data required for claim approvals (Hospital and InsuranceHolder trust scores). Structural Segregation (Homogeneous Security Posture) dictates separation of concerns (e.g., `/insuranceHolders/{insuranceHolderId}` vs. `/hospitals/{hospitalId}`). Access Modeling principles are used for standardizing patterns (ownership via paths and membership maps where applicable).\n\nTo enable QAPs, the system uses segregation to ensure that listing operations are always secure. For instance, listing claims is restricted to authorized users within the `/insuranceHolders/{insuranceHolderId}/claims/{claimId}` hierarchy. The trust score is central to access control and claim approvals. The structure also facilitates the emergency surgery-first protocol by allowing for immediate treatment approval based on trust scores. It supports AI-driven anomaly detection and provides comprehensive audit trails by segregating audit data into a specific collection."
   }
 }
-
-    

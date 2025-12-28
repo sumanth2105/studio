@@ -12,14 +12,16 @@ import {
   User,
   Shield,
   Users,
+  Copy,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { mockHolder } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
+import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
-    const { name, trustScore, policies, emergencyNominee } = mockHolder;
+    const { name, trustScore, policies, emergencyNominee, id: patientId } = mockHolder;
     const activePolicy = policies.find((p) => p.status === 'Active');
 
   return (
@@ -32,8 +34,15 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="flex flex-col items-center justify-center p-6 bg-card-foreground/5 rounded-lg">
+            <div className="flex flex-col items-center justify-center p-6 bg-card-foreground/5 rounded-lg space-y-4">
               <TrustScoreGauge score={trustScore} />
+              <div className="text-center">
+                 <p className="text-xs text-muted-foreground">Your Patient ID</p>
+                 <Badge variant="secondary" className="text-lg font-mono tracking-wider cursor-pointer" title="Copy ID" onClick={() => navigator.clipboard.writeText(patientId)}>
+                    {patientId}
+                    <Copy className="ml-2 h-3 w-3"/>
+                 </Badge>
+              </div>
             </div>
             {activePolicy && (
               <div className="space-y-4 rounded-lg p-6 bg-primary/5">

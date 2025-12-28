@@ -44,6 +44,7 @@ import {
   UploadCloud,
   ClipboardList,
   FileCheck,
+  Fingerprint,
 } from 'lucide-react';
 import { mockHolder } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
@@ -51,8 +52,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const patientSearchSchema = z.object({
+const patientIdSearchSchema = z.object({
+  patientId: z.string().min(1, 'Patient ID is required.'),
+});
+
+const mobileSearchSchema = z.object({
   mobile: z.string().length(10, 'Please enter a valid 10-digit mobile number.'),
   aadhaarLast4: z.string().length(4, 'Please enter the last 4 digits of Aadhaar.'),
 });
@@ -73,7 +79,8 @@ const claimSchema = z.object({
   medicalReports: z.any().refine(file => file?.length > 0, 'At least one medical report is required.'),
 });
 
-type PatientSearchFormValues = z.infer<typeof patientSearchSchema>;
+type PatientIdSearchFormValues = z.infer<typeof patientIdSearchSchema>;
+type MobileSearchFormValues = z.infer<typeof mobileSearchSchema>;
 type OtpFormValues = z.infer<typeof otpSchema>;
 type ClaimFormValues = z.infer<typeof claimSchema>;
 
@@ -90,8 +97,13 @@ export default function VerifyPatientPage() {
   const verifiedPatient = mockHolder; // In a real app, this would be fetched
   const activePolicy = verifiedPatient.policies.find(p => p.status === 'Active');
 
-  const searchForm = useForm<PatientSearchFormValues>({
-    resolver: zodResolver(patientSearchSchema),
+  const patientIdForm = useForm<PatientIdSearchFormValues>({
+    resolver: zodResolver(patientIdSearchSchema),
+    defaultValues: { patientId: '' }
+  });
+
+  const mobileForm = useForm<MobileSearchFormValues>({
+    resolver: zodResolver(mobileSearchSchema),
     defaultValues: { mobile: '', aadhaarLast4: '' }
   });
 
@@ -103,14 +115,17 @@ export default function VerifyPatientPage() {
     resolver: zodResolver(claimSchema),
   });
 
-  const handlePatientSearch = async (data: PatientSearchFormValues) => {
+  const handlePatientSearch = async (data: MobileSearchFormValues | PatientIdSearchFormValues) => {
     setIsLoading(true);
     setErrorMessage(null);
     console.log('Searching for patient:', data);
 
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
-    if (data.mobile === mockHolder.mobile.substring(0, 10) && data.aadhaarLast4 === mockHolder.aadhaarLast4) {
+    const isMobileMatch = 'mobile' in data && data.mobile === mockHolder.mobile.substring(0, 10) && data.aadhaarLast4 === mockHolder.aadhaarLast4;
+    const isPatientIdMatch = 'patientId' in data && data.patientId === mockHolder.id;
+
+    if (isMobileMatch || isPatientIdMatch) {
       setStep('otp');
     } else {
       setErrorMessage('Patient not found. Please check the details and try again.');
@@ -158,7 +173,8 @@ export default function VerifyPatientPage() {
   const handleReset = () => {
     setStep('search');
     setErrorMessage(null);
-    searchForm.reset({ mobile: '', aadhaarLast4: ''});
+    patientIdForm.reset({ patientId: '' });
+    mobileForm.reset({ mobile: '', aadhaarLast4: ''});
     otpForm.reset({ otp: '' });
     claimForm.reset();
     setNewClaimId(null);
@@ -168,54 +184,93 @@ export default function VerifyPatientPage() {
     switch (step) {
       case 'search':
         return (
-          <Form {...searchForm}>
-            <form onSubmit={searchForm.handleSubmit(handlePatientSearch)}>
-              <CardHeader>
-                <CardTitle>Verify Patient</CardTitle>
-                <CardDescription>
-                  Enter patient's mobile number and last 4 digits of Aadhaar to begin.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={searchForm.control}
-                  name="mobile"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mobile Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="10-digit mobile number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={searchForm.control}
-                  name="aadhaarLast4"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last 4 Digits of Aadhaar</FormLabel>
-                      <FormControl>
-                        <Input placeholder="XXXX" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" disabled={isLoading} className='w-full'>
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                  )}
-                  Send OTP
-                </Button>
-              </CardFooter>
-            </form>
-          </Form>
+          <>
+            <CardHeader>
+              <CardTitle>Verify Patient & Initiate Claim</CardTitle>
+              <CardDescription>
+                Find the patient to begin the claim submission process.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="patient-id">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="patient-id">
+                    <Fingerprint className="mr-2 h-4 w-4" /> Patient ID
+                  </TabsTrigger>
+                  <TabsTrigger value="mobile">
+                    Mobile & Aadhaar
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="patient-id" className="pt-4">
+                  <Form {...patientIdForm}>
+                    <form onSubmit={patientIdForm.handleSubmit(handlePatientSearch)} className="space-y-4">
+                      <FormField
+                        control={patientIdForm.control}
+                        name="patientId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Patient ID</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter patient's unique ID" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" disabled={isLoading} className='w-full'>
+                        {isLoading ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <ArrowRight className="mr-2 h-4 w-4" />
+                        )}
+                        Find Patient
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+                <TabsContent value="mobile" className="pt-4">
+                  <Form {...mobileForm}>
+                    <form onSubmit={mobileForm.handleSubmit(handlePatientSearch)} className="space-y-4">
+                      <FormField
+                        control={mobileForm.control}
+                        name="mobile"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Mobile Number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="10-digit mobile number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={mobileForm.control}
+                        name="aadhaarLast4"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last 4 Digits of Aadhaar</FormLabel>
+                            <FormControl>
+                              <Input placeholder="XXXX" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" disabled={isLoading} className='w-full'>
+                        {isLoading ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <ArrowRight className="mr-2 h-4 w-4" />
+                        )}
+                        Find Patient
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </>
         );
 
       case 'otp':
@@ -225,7 +280,7 @@ export default function VerifyPatientPage() {
               <CardHeader>
                 <CardTitle>Enter OTP</CardTitle>
                 <CardDescription>
-                  An OTP has been sent to the patient's registered mobile number.
+                  An OTP has been sent to the patient's registered mobile number for verification.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -548,5 +603,3 @@ export default function VerifyPatientPage() {
     </div>
   );
 }
-
-    
