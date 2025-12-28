@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useMemo } from 'react';
-import { collection, query, where } from 'firebase/firestore';
+import { useMemoFirebase } from '@/firebase/provider';
+import { collection, query } from 'firebase/firestore';
 import { useFirebase, useCollection, WithId } from '@/firebase';
 
 export interface Document {
@@ -20,7 +20,7 @@ export interface Document {
 export function useDocuments(userId?: string) {
   const { firestore } = useFirebase();
 
-  const documentsQuery = useMemo(() => {
+  const documentsQuery = useMemoFirebase(() => {
     if (!firestore || !userId) return null;
     return query(
       collection(firestore, 'insuranceHolders', userId, 'documents')
@@ -31,5 +31,3 @@ export function useDocuments(userId?: string) {
 
   return { documents, isLoading, error };
 }
-
-    
