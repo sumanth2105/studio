@@ -164,7 +164,7 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleUpload = async (docId: DocumentType) => {
+  const handleUpload = (docId: DocumentType) => {
     if (!user || !firestore) {
       toast({ variant: 'destructive', title: 'You must be logged in to upload documents.' });
       return;
@@ -192,49 +192,55 @@ export default function DocumentsPage() {
           description: `Could not upload ${documentList.find(d => d.id === docId)?.name}. Please try again.`,
         });
       },
-      async () => {
-        try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then(downloadURL => {
           const documentsCollection = collection(firestore, 'insuranceHolders', user.uid, 'documents');
-          
           const q = query(documentsCollection, where("fileType", "==", docId));
-          const querySnapshot = await getDocs(q);
+          
+          getDocs(q).then(querySnapshot => {
+            if (!querySnapshot.empty) {
+              // Update existing document
+              const docRef = querySnapshot.docs[0].ref;
+              setDocumentNonBlocking(docRef, {
+                fileName: file.name,
+                fileUrl: downloadURL,
+                createdAt: serverTimestamp(),
+              }, { merge: true });
+            } else {
+              // Add new document
+              addDocumentNonBlocking(documentsCollection, {
+                id: uuidv4(),
+                userId: user.uid,
+                fileName: file.name,
+                fileUrl: downloadURL,
+                fileType: docId,
+                createdAt: serverTimestamp(),
+              });
+            }
 
-          if (!querySnapshot.empty) {
-            // Update existing document
-            const docRef = querySnapshot.docs[0].ref;
-             setDocumentNonBlocking(docRef, {
-              fileName: file.name,
-              fileUrl: downloadURL,
-              createdAt: serverTimestamp(),
-            }, { merge: true });
-          } else {
-            // Add new document
-             addDocumentNonBlocking(documentsCollection, {
-              id: uuidv4(),
-              userId: user.uid,
-              fileName: file.name,
-              fileUrl: downloadURL,
-              fileType: docId,
-              createdAt: serverTimestamp(),
+            setUploadStatus((prev) => ({ ...prev, [docId]: 'uploaded' }));
+            toast({
+              title: 'Upload Successful',
+              description: `${documentList.find(d => d.id === docId)?.name} has been uploaded.`,
             });
-          }
-
-          setUploadStatus((prev) => ({ ...prev, [docId]: 'uploaded' }));
-          toast({
-            title: 'Upload Successful',
-            description: `${documentList.find(d => d.id === docId)?.name} has been uploaded.`,
+          }).catch(error => {
+             console.error('Firestore query error:', error);
+             setUploadStatus((prev) => ({ ...prev, [docId]: 'error' }));
+             toast({
+               variant: 'destructive',
+               title: 'Save Failed',
+               description: `Could not save document details. Please try again.`,
+             });
           });
-        } catch (error) {
-           console.error('Firestore error:', error);
+        }).catch(error => {
+           console.error('Get Download URL error:', error);
            setUploadStatus((prev) => ({ ...prev, [docId]: 'error' }));
            toast({
              variant: 'destructive',
-             title: 'Save Failed',
-             description: `Could not save document details. Please try again.`,
+             title: 'Upload Failed',
+             description: `Could not get document URL. Please try again.`,
            });
-        }
+        });
       }
     );
   };
@@ -421,3 +427,5 @@ export default function DocumentsPage() {
     </Card>
   );
 }
+
+    
