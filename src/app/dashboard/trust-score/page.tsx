@@ -47,14 +47,15 @@ const documentListForCheck: {
 export default function TrustScorePage() {
   const [scoreResult, setScoreResult] =
     React.useState<CalculateTrustScoreOutput | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true); // Start in loading state
   const [error, setError] = React.useState<string | null>(null);
+  const [hasCalculated, setHasCalculated] = React.useState(false);
 
   const { user } = useUser();
   const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
 
-  const fetchScore = async () => {
-    if (isLoadingDocuments) return; // Wait for documents to be loaded
+  const fetchScore = React.useCallback(async () => {
+    if (isLoadingDocuments) return;
 
     setIsLoading(true);
     setError(null);
@@ -63,7 +64,6 @@ export default function TrustScorePage() {
         (p) => p.status === 'Active'
       );
 
-      // Check for required documents
       const requiredDocs = documentListForCheck.filter(d => d.required);
       const uploadedDocTypes = new Set(uploadedDocuments?.map(d => d.fileType));
       const allRequiredDocsUploaded = requiredDocs.every(d => uploadedDocTypes.has(d.id));
@@ -100,8 +100,16 @@ export default function TrustScorePage() {
       setError('Could not calculate trust score. Please try again later.');
     } finally {
       setIsLoading(false);
+      setHasCalculated(true);
     }
-  };
+  }, [isLoadingDocuments, uploadedDocuments]);
+
+  React.useEffect(() => {
+    // This effect runs only once when documents are loaded for the first time.
+    if (!isLoadingDocuments && !hasCalculated) {
+      fetchScore();
+    }
+  }, [isLoadingDocuments, hasCalculated, fetchScore]);
 
   const getCategoryChipColor = (category?: string) => {
     switch (category) {
@@ -121,8 +129,9 @@ export default function TrustScorePage() {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Calculating your trust score...</p>
         </div>
       );
     }
@@ -140,10 +149,10 @@ export default function TrustScorePage() {
     }
 
     if (!scoreResult) {
-      return (
+       return (
          <CardContent>
             <div className="flex flex-col items-center justify-center h-64 text-center">
-                <p className="text-muted-foreground mb-4">Click the button below to calculate your latest trust score.</p>
+                <p className="text-muted-foreground mb-4">Could not retrieve trust score. Please try again.</p>
             </div>
         </CardContent>
       );
@@ -218,7 +227,7 @@ export default function TrustScorePage() {
          <CardFooter className="justify-center pt-6">
             <Button onClick={fetchScore} disabled={isLoading || isLoadingDocuments}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                {scoreResult ? 'Recalculate Score' : 'Calculate Score'}
+                Recalculate Score
             </Button>
         </CardFooter>
       </Card>
