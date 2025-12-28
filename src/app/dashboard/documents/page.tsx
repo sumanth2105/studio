@@ -140,18 +140,19 @@ export default function DocumentsPage() {
     setCurrentDate(new Date().toLocaleDateString());
   }, []);
   
-   useEffect(() => {
-    if (uploadedDocuments) {
-      setUploadStatus(prevStatus => {
-        const newStatus = { ...prevStatus };
-        documentList.forEach(docInfo => {
-            const isUploaded = uploadedDocuments.some(doc => doc.fileType === docInfo.id);
-            newStatus[docInfo.id] = isUploaded ? 'uploaded' : 'idle';
-        });
-        return newStatus;
+  useEffect(() => {
+    if (user && !isLoadingDocuments) {
+      const newStatus = { ...uploadStatus };
+      documentList.forEach(docInfo => {
+        const isUploaded = uploadedDocuments?.some(doc => doc.fileType === docInfo.id);
+        // Only update if it's not currently uploading
+        if (newStatus[docInfo.id] !== 'uploading') {
+          newStatus[docInfo.id] = isUploaded ? 'uploaded' : 'idle';
+        }
       });
+      setUploadStatus(newStatus);
     }
-  }, [uploadedDocuments]);
+  }, [user, uploadedDocuments, isLoadingDocuments]);
 
 
   const handleFileChange = (
@@ -199,27 +200,23 @@ export default function DocumentsPage() {
           const q = query(documentsCollection, where("fileType", "==", docId));
           
           getDocs(q).then(querySnapshot => {
+            const dataToSave = {
+              fileName: file.name,
+              fileUrl: downloadURL,
+              createdAt: serverTimestamp(),
+              fileType: docId,
+              userId: user.uid,
+            };
+
             if (!querySnapshot.empty) {
-              // Update existing document
               const docRef = querySnapshot.docs[0].ref;
-              setDocumentNonBlocking(docRef, {
-                fileName: file.name,
-                fileUrl: downloadURL,
-                createdAt: serverTimestamp(),
-              }, { merge: true });
+              setDocumentNonBlocking(docRef, dataToSave, { merge: true });
             } else {
-              // Add new document
-              addDocumentNonBlocking(documentsCollection, {
-                id: uuidv4(),
-                userId: user.uid,
-                fileName: file.name,
-                fileUrl: downloadURL,
-                fileType: docId,
-                createdAt: serverTimestamp(),
-              });
+              addDocumentNonBlocking(documentsCollection, { id: uuidv4(), ...dataToSave });
             }
 
             setUploadStatus((prev) => ({ ...prev, [docId]: 'uploaded' }));
+            setFiles(prev => ({...prev, [docId]: null})); // Clear the file from state
             toast({
               title: 'Upload Successful',
               description: `${documentList.find(d => d.id === docId)?.name} has been uploaded.`,
@@ -326,7 +323,8 @@ export default function DocumentsPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {documentList.map((doc) => (
+        {(isLoadingDocuments && !user) && <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}
+        {user && documentList.map((doc) => (
           <div key={doc.id}>
             {doc.id === 'self_declaration' ? (
                  <div className="flex flex-col md:flex-row items-start gap-4 p-4 border rounded-lg">
@@ -390,7 +388,7 @@ export default function DocumentsPage() {
                      )}
                      {uploadStatus[doc.id] === 'uploaded' && (
                         <p className="text-sm text-green-600 font-medium mt-1">
-                           Uploaded: {uploadedDocuments?.find(d => d.fileType === doc.id)?.fileName || files[doc.id]?.name}
+                           Uploaded: {uploadedDocuments?.find(d => d.fileType === doc.id)?.fileName}
                         </p>
                      )}
                 </div>
@@ -428,3 +426,5 @@ export default function DocumentsPage() {
     </Card>
   );
 }
+
+    
