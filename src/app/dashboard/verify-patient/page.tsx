@@ -46,13 +46,14 @@ import {
   FileCheck,
   Fingerprint,
 } from 'lucide-react';
-import { mockHolder } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useUserContext } from '@/context/user-context';
+import type { Holder } from '@/lib/types';
 
 const patientIdSearchSchema = z.object({
   patientId: z.string().min(1, 'Patient ID is required.'),
@@ -89,13 +90,14 @@ type VerificationStep = 'search' | 'otp' | 'verified' | 'error' | 'claim_submitt
 export default function VerifyPatientPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const { holder, isLoading: isHolderLoading } = useUserContext();
   const [step, setStep] = useState<VerificationStep>('search');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [newClaimId, setNewClaimId] = useState<string | null>(null);
   
-  const verifiedPatient = mockHolder; // In a real app, this would be fetched
-  const activePolicy = verifiedPatient.policies.find(p => p.status === 'Active');
+  const verifiedPatient = holder;
+  const activePolicy = verifiedPatient?.policies.find(p => p.status === 'Active');
 
   const patientIdForm = useForm<PatientIdSearchFormValues>({
     resolver: zodResolver(patientIdSearchSchema),
@@ -122,8 +124,8 @@ export default function VerifyPatientPage() {
 
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
-    const isMobileMatch = 'mobile' in data && data.mobile === mockHolder.mobile.substring(0, 10) && data.aadhaarLast4 === mockHolder.aadhaarLast4;
-    const isPatientIdMatch = 'patientId' in data && data.patientId === mockHolder.id;
+    const isMobileMatch = verifiedPatient && 'mobile' in data && data.mobile === verifiedPatient.mobile.substring(0, 10) && data.aadhaarLast4 === verifiedPatient.aadhaarLast4;
+    const isPatientIdMatch = verifiedPatient && 'patientId' in data && data.patientId === verifiedPatient.id;
 
     if (isMobileMatch || isPatientIdMatch) {
       setStep('otp');
@@ -179,6 +181,14 @@ export default function VerifyPatientPage() {
     claimForm.reset();
     setNewClaimId(null);
   };
+
+  if (isHolderLoading) {
+    return (
+        <div className="flex justify-center items-center h-64">
+            <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+    );
+  }
 
   const renderContent = () => {
     switch (step) {
@@ -330,6 +340,7 @@ export default function VerifyPatientPage() {
         );
     
      case 'verified':
+        if (!verifiedPatient) return <Loader2 className="w-8 h-8 animate-spin" />;
         return (
             <>
                 <CardHeader>
@@ -551,6 +562,7 @@ export default function VerifyPatientPage() {
         )
 
       case 'claim_submitted':
+        if (!verifiedPatient) return <Loader2 className="w-8 h-8 animate-spin" />;
         return (
             <Card>
                 <CardHeader className="text-center">

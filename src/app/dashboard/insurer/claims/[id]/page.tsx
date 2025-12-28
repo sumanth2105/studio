@@ -34,8 +34,9 @@ import {
   ThumbsDown,
   ThumbsUp,
   CircleHelp,
+  Loader2,
 } from 'lucide-react';
-import { mockClaims, mockHolder, mockHospital } from '@/lib/data';
+import { mockClaims, mockHospital } from '@/lib/data';
 import { ClaimStatusBadge } from '@/components/dashboard/claim-status-badge';
 import { ClaimExplanation } from '@/components/dashboard/claim-explanation';
 import { notFound } from 'next/navigation';
@@ -43,10 +44,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import type { Claim } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import React from 'react';
 import Link from 'next/link';
+import { useUserContext } from '@/context/user-context';
+import type { Claim } from '@/lib/types';
 
 const VerificationIndicator = ({
   status,
@@ -70,13 +72,17 @@ const VerificationIndicator = ({
 
 export default function ClaimReviewPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
+  const { holder, isLoading } = useUserContext();
   const claim = mockClaims.find((c) => c.id === params.id);
-
+  
   if (!claim || !['Manual Review', 'Insurance Claim Guaranteed'].includes(claim.status)) {
     notFound();
   }
 
-  const holder = mockHolder;
+  if (isLoading || !holder) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin" /></div>;
+  }
+  
   const hospital = mockHospital;
   const policy = holder.policies.find((p) => p.id === claim.policyId);
 
@@ -324,5 +330,3 @@ export default function ClaimReviewPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
-
-    
