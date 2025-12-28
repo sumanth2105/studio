@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Lightbulb, Loader2, AlertCircle } from 'lucide-react';
@@ -19,7 +19,7 @@ export function ClaimExplanation({ claim, holder, hospital }: ClaimExplanationPr
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getExplanation = async () => {
+  const getExplanation = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setExplanation(null);
@@ -46,7 +46,7 @@ export function ClaimExplanation({ claim, holder, hospital }: ClaimExplanationPr
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [claim, holder, hospital]);
 
   if (isLoading) {
       return (

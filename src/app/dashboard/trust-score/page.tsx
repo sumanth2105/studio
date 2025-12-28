@@ -18,7 +18,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
-import { mockHolder, mockClaims } from '@/lib/data';
+import { mockClaims } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,8 +29,8 @@ import { differenceInDays, differenceInMonths } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useDocuments } from '@/hooks/use-documents';
 import { useUser } from '@/firebase';
+import { useUserContext } from '@/context/user-context';
 
-// Duplicating this list to avoid circular dependencies
 const documentListForCheck: {
   id: string;
   name: string;
@@ -45,71 +45,63 @@ const documentListForCheck: {
 ];
 
 export default function TrustScorePage() {
-  const [scoreResult, setScoreResult] =
-    React.useState<CalculateTrustScoreOutput | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true); // Start in loading state
+  const { holder, setHolder, isLoading: isUserContextLoading } = useUserContext();
+  const [scoreResult, setScoreResult] = React.useState<CalculateTrustScoreOutput | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-
   const { user } = useUser();
   const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
 
   const fetchScore = React.useCallback(async () => {
-    // Prevent fetching if already loading or if documents are still loading.
-    if (isLoadingDocuments) return;
+    if (isUserContextLoading || isLoadingDocuments || !holder) return;
 
     setIsLoading(true);
     setError(null);
     try {
-      const activePolicy = mockHolder.policies.find(
-        (p) => p.status === 'Active'
-      );
-
+      const activePolicy = holder.policies.find(p => p.status === 'Active');
       const requiredDocs = documentListForCheck.filter(d => d.required);
       const uploadedDocTypes = new Set(uploadedDocuments?.map(d => d.fileType));
       const allRequiredDocsUploaded = requiredDocs.every(d => uploadedDocTypes.has(d.id));
-
       const premiumOverdueDays = activePolicy
         ? Math.max(0, differenceInDays(new Date(), new Date(activePolicy.lastPremiumPaymentDate)) - 30)
         : 0;
 
       const result = await calculateTrustScore({
         verification: {
-          ...mockHolder.verification,
+          ...holder.verification,
           uploadedRequiredDocuments: allRequiredDocsUploaded,
         },
         policy: {
           status: activePolicy?.status || 'Inactive',
-          tenureMonths: activePolicy
-            ? differenceInMonths(new Date(), new Date(activePolicy.startDate))
-            : 0,
+          tenureMonths: activePolicy ? differenceInMonths(new Date(), new Date(activePolicy.startDate)) : 0,
           premiumOverdueDays: premiumOverdueDays,
         },
         paymentHistory: {
-          onTimeRatio: mockHolder.paymentHistory.onTimeRatio,
+          onTimeRatio: holder.paymentHistory.onTimeRatio,
         },
         claimHistory: {
           totalClaims: mockClaims.length,
-          rejectedClaims: mockClaims.filter((c) => c.status === 'Rejected')
-            .length,
+          rejectedClaims: mockClaims.filter(c => c.status === 'Rejected').length,
         },
-        fraudIndicators: mockHolder.fraudIndicators,
+        fraudIndicators: holder.fraudIndicators,
       });
+
       setScoreResult(result);
+      if (result) {
+        setHolder({ ...holder, trustScore: result.score });
+      }
     } catch (e) {
       console.error(e);
       setError('Could not calculate trust score. Please try again later.');
     } finally {
       setIsLoading(false);
     }
-  }, [isLoadingDocuments, uploadedDocuments, mockHolder, mockClaims]);
+  }, [isUserContextLoading, isLoadingDocuments, holder, uploadedDocuments, setHolder]);
 
   React.useEffect(() => {
-    // Only fetch score automatically if documents are loaded.
-    if (!isLoadingDocuments) {
-        fetchScore();
-    }
-  }, [isLoadingDocuments, fetchScore]);
-
+    // Automatically fetch score when the component mounts and dependencies are ready.
+    fetchScore();
+  }, [fetchScore]);
 
   const getCategoryChipColor = (category?: string) => {
     switch (category) {
@@ -130,9 +122,8 @@ export default function TrustScorePage() {
     fetchScore();
   }
 
-
   const renderContent = () => {
-    if (isLoading || isLoadingDocuments) {
+    if (isLoading || isUserContextLoading || isLoadingDocuments) {
       return (
         <CardContent>
             <div className="flex flex-col justify-center items-center h-64">
@@ -155,16 +146,16 @@ export default function TrustScorePage() {
       );
     }
 
-    if (!scoreResult) {
-       return (
-         <CardContent>
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-                <p className="text-muted-foreground mb-4">Could not retrieve score. Click the button below to try again.</p>
-                <Button onClick={fetchScore} disabled={isLoading || isLoadingDocuments}>
-                    <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                    Calculate Score
-                </Button>
-            </div>
+    if (!scoreResult || !holder) {
+      return (
+        <CardContent>
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <p className="text-muted-foreground mb-4">Could not retrieve score. Click the button below to try again.</p>
+            <Button onClick={handleRecalculate} disabled={isLoading || isLoadingDocuments}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Calculate Score
+            </Button>
+          </div>
         </CardContent>
       );
     }
@@ -173,7 +164,7 @@ export default function TrustScorePage() {
       <>
         <CardContent className="grid md:grid-cols-2 gap-8 items-center">
           <div className="flex flex-col items-center justify-center p-6 bg-card-foreground/5 rounded-lg">
-            <TrustScoreGauge score={scoreResult.score} />
+            <TrustScoreGauge score={holder.trustScore} />
             <div
               className={`mt-4 px-3 py-1 text-sm font-semibold rounded-full ${getCategoryChipColor(
                 scoreResult.category

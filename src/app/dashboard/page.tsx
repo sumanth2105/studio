@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -14,15 +15,26 @@ import {
   Shield,
   Users,
   Copy,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { mockHolder } from '@/lib/data';
 import { TrustScoreGauge } from '@/components/dashboard/trust-score-gauge';
 import { Badge } from '@/components/ui/badge';
+import { useUserContext } from '@/context/user-context';
 
 export default function DashboardPage() {
-    const { name, trustScore, policies, emergencyNominee, id: patientId } = mockHolder;
+    const { holder, isLoading } = useUserContext();
+
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin" /></div>;
+    }
+    
+    if (!holder) {
+        return <div>Could not load user data.</div>
+    }
+
+    const { name, trustScore, policies, emergencyNominee, id: patientId } = holder;
     const activePolicy = policies.find((p) => p.status === 'Active');
 
   return (

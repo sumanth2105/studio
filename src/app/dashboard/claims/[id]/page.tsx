@@ -1,4 +1,6 @@
 
+'use client';
+
 import {
   Card,
   CardContent,
@@ -23,21 +25,27 @@ import {
   User,
   CheckCircle,
   Clock,
+  Loader2
 } from 'lucide-react';
-import { mockClaims, mockHolder, mockHospital } from '@/lib/data';
+import { mockClaims, mockHospital } from '@/lib/data';
 import { ClaimStatusBadge } from '@/components/dashboard/claim-status-badge';
 import { ClaimExplanation } from '@/components/dashboard/claim-explanation';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { useUserContext } from '@/context/user-context';
 
 export default function ClaimDetailPage({ params }: { params: { id: string } }) {
+  const { holder, isLoading } = useUserContext();
   const claim = mockClaims.find((c) => c.id === params.id);
 
   if (!claim) {
     notFound();
   }
+  
+  if (isLoading || !holder) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin" /></div>;
+  }
 
-  const holder = mockHolder;
   const hospital = mockHospital;
   const policy = holder.policies.find((p) => p.id === claim.policyId);
 
@@ -166,5 +174,3 @@ export default function ClaimDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
-
-    
