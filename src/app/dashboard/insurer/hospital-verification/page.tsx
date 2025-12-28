@@ -27,12 +27,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockVerificationRequests } from '@/lib/data';
-import type { VerificationRequest, VerificationStatus } from '@/lib/types';
+import type { VerificationRequest, VerificationRequestStatus } from '@/lib/types';
 import { MoreHorizontal, CheckCircle, ShieldAlert, FileWarning } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-const statusStyles: Record<VerificationStatus, string> = {
+const statusStyles: Record<VerificationRequestStatus, string> = {
   'Pending Verification': 'bg-yellow-100 text-yellow-800 border-yellow-200',
   'Additional Documents Required': 'bg-blue-100 text-blue-800 border-blue-200',
   'Verified': 'bg-green-100 text-green-800 border-green-200',
@@ -79,6 +79,7 @@ export default function HospitalVerificationPage() {
                 <TableHead>Request Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Trust Score</TableHead>
+                <TableHead>Trust Score Analysis</TableHead>
                 <TableHead>Claims</TableHead>
                 <TableHead>Dispute %</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -106,6 +107,7 @@ export default function HospitalVerificationPage() {
                             {req.trustScore}
                         </span>
                     </TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{req.trustScoreAnalysis}</TableCell>
                     <TableCell>{req.claimsCount}</TableCell>
                      <TableCell>{(req.disputeRatio * 100).toFixed(1)}%</TableCell>
                     <TableCell className="text-right">
@@ -133,7 +135,7 @@ export default function HospitalVerificationPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     No pending hospital verification requests.
                   </TableCell>
                 </TableRow>

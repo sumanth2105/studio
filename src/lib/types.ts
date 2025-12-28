@@ -151,4 +151,5 @@ export interface VerificationRequest {
   claimsCount: number;
   disputeRatio: number;
   trustScore: number;
+  trustScoreAnalysis: string;
 }

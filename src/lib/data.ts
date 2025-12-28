@@ -275,6 +275,7 @@ export const mockVerificationRequests: VerificationRequest[] = [
     claimsCount: 150,
     disputeRatio: 0.05,
     trustScore: 88,
+    trustScoreAnalysis: 'Good claim history, but document submission is slightly delayed.'
   },
   {
     id: 'hosp-req-2',
@@ -285,6 +286,7 @@ export const mockVerificationRequests: VerificationRequest[] = [
     claimsCount: 320,
     disputeRatio: 0.02,
     trustScore: 94,
+    trustScoreAnalysis: 'Excellent claim approval rate and fast document submission.'
   },
   {
     id: 'hosp-req-3',
@@ -295,5 +297,6 @@ export const mockVerificationRequests: VerificationRequest[] = [
     claimsCount: 80,
     disputeRatio: 0.1,
     trustScore: 75,
+    trustScoreAnalysis: 'High dispute ratio. Suggest reviewing claim submission process.'
   },
 ];
