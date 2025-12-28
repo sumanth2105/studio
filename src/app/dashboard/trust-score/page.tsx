@@ -51,8 +51,10 @@ export default function TrustScorePage() {
   const [error, setError] = React.useState<string | null>(null);
   const { user } = useUser();
   const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
+  const isInitialLoad = React.useRef(true);
 
-  const fetchScore = async () => {
+
+  const fetchScore = React.useCallback(async () => {
     if (!holder) return;
 
     setIsLoading(true);
@@ -88,7 +90,7 @@ export default function TrustScorePage() {
 
       setScoreResult(result);
       if (result) {
-        setHolder({ ...holder, trustScore: result.score });
+        setHolder(prevHolder => prevHolder ? { ...prevHolder, trustScore: result.score } : null);
       }
     } catch (e) {
       console.error(e);
@@ -96,15 +98,14 @@ export default function TrustScorePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [holder, uploadedDocuments, setHolder]);
 
-  // Run only once on initial load
   React.useEffect(() => {
-    if (!isUserContextLoading && !isLoadingDocuments) {
+    if (isInitialLoad.current && !isUserContextLoading && !isLoadingDocuments && holder) {
+        isInitialLoad.current = false;
         fetchScore();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isUserContextLoading, isLoadingDocuments]);
+  }, [isUserContextLoading, isLoadingDocuments, holder, fetchScore]);
 
   const getCategoryChipColor = (category?: string) => {
     switch (category) {
@@ -126,7 +127,7 @@ export default function TrustScorePage() {
   }
 
   const renderContent = () => {
-    if (isLoading || isUserContextLoading || isLoadingDocuments) {
+    if ((isLoading || isUserContextLoading || isLoadingDocuments) && !scoreResult) {
       return (
         <CardContent>
             <div className="flex flex-col justify-center items-center h-64">
