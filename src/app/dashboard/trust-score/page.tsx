@@ -47,7 +47,7 @@ const documentListForCheck: {
 export default function TrustScorePage() {
   const [scoreResult, setScoreResult] =
     React.useState<CalculateTrustScoreOutput | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true); // Start in loading state
+  const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [hasCalculated, setHasCalculated] = React.useState(false);
 
@@ -55,7 +55,8 @@ export default function TrustScorePage() {
   const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
 
   const fetchScore = React.useCallback(async () => {
-    if (isLoadingDocuments) return;
+    // Prevent fetching if already loading or if documents are still loading.
+    if (isLoading || isLoadingDocuments) return;
 
     setIsLoading(true);
     setError(null);
@@ -102,7 +103,7 @@ export default function TrustScorePage() {
       setIsLoading(false);
       setHasCalculated(true);
     }
-  }, [isLoadingDocuments, uploadedDocuments]);
+  }, [isLoading, isLoadingDocuments, uploadedDocuments]); // Stable dependencies
 
   React.useEffect(() => {
     // This effect runs only once when documents are loaded for the first time.
@@ -125,6 +126,12 @@ export default function TrustScorePage() {
         return 'bg-muted text-muted-foreground';
     }
   };
+  
+  const handleRecalculate = () => {
+    setHasCalculated(false); // Allow fetchScore to run again
+    fetchScore();
+  }
+
 
   const renderContent = () => {
     if (isLoading) {
@@ -152,7 +159,11 @@ export default function TrustScorePage() {
        return (
          <CardContent>
             <div className="flex flex-col items-center justify-center h-64 text-center">
-                <p className="text-muted-foreground mb-4">Could not retrieve trust score. Please try again.</p>
+                <p className="text-muted-foreground mb-4">Click the button below to calculate your latest trust score.</p>
+                <Button onClick={fetchScore} disabled={isLoading || isLoadingDocuments}>
+                    <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    Calculate Score
+                </Button>
             </div>
         </CardContent>
       );
@@ -225,7 +236,7 @@ export default function TrustScorePage() {
         </CardHeader>
         {renderContent()}
          <CardFooter className="justify-center pt-6">
-            <Button onClick={fetchScore} disabled={isLoading || isLoadingDocuments}>
+            <Button onClick={handleRecalculate} disabled={isLoading || isLoadingDocuments}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                 Recalculate Score
             </Button>
