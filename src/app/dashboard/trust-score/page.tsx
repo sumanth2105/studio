@@ -55,14 +55,14 @@ export default function TrustScorePage() {
 
 
   const fetchScore = React.useCallback(async () => {
-    if (!holder) return;
+    if (!holder || !uploadedDocuments) return;
 
     setIsLoading(true);
     setError(null);
     try {
       const activePolicy = holder.policies.find(p => p.status === 'Active');
       const requiredDocs = documentListForCheck.filter(d => d.required);
-      const uploadedDocTypes = new Set(uploadedDocuments?.map(d => d.fileType));
+      const uploadedDocTypes = new Set(uploadedDocuments.map(d => d.fileType));
       const allRequiredDocsUploaded = requiredDocs.every(d => uploadedDocTypes.has(d.id));
       const premiumOverdueDays = activePolicy
         ? Math.max(0, differenceInDays(new Date(), new Date(activePolicy.lastPremiumPaymentDate)) - 30)
@@ -90,7 +90,13 @@ export default function TrustScorePage() {
 
       setScoreResult(result);
       if (result) {
-        setHolder(prevHolder => prevHolder ? { ...prevHolder, trustScore: result.score } : null);
+        // IMPORTANT: Update the holder in a way that doesn't trigger a re-fetch loop
+        setHolder(prevHolder => {
+            if (prevHolder && prevHolder.trustScore !== result.score) {
+                return { ...prevHolder, trustScore: result.score };
+            }
+            return prevHolder;
+        });
       }
     } catch (e) {
       console.error(e);
@@ -101,11 +107,12 @@ export default function TrustScorePage() {
   }, [holder, uploadedDocuments, setHolder]);
 
   React.useEffect(() => {
-    if (isInitialLoad.current && !isUserContextLoading && !isLoadingDocuments && holder) {
-        isInitialLoad.current = false;
+    // Only run on initial load when all data is ready
+    if (isInitialLoad.current && !isUserContextLoading && !isLoadingDocuments && holder && uploadedDocuments) {
+        isInitialLoad.current = false; // Prevent this from running again
         fetchScore();
     }
-  }, [isUserContextLoading, isLoadingDocuments, holder, fetchScore]);
+  }, [isUserContextLoading, isLoadingDocuments, holder, uploadedDocuments, fetchScore]);
 
   const getCategoryChipColor = (category?: string) => {
     switch (category) {
@@ -127,7 +134,9 @@ export default function TrustScorePage() {
   }
 
   const renderContent = () => {
-    if ((isLoading || isUserContextLoading || isLoadingDocuments) && !scoreResult) {
+    const isPageLoading = (isLoading || isUserContextLoading || isLoadingDocuments) && !scoreResult;
+
+    if (isPageLoading) {
       return (
         <CardContent>
             <div className="flex flex-col justify-center items-center h-64">
@@ -154,7 +163,7 @@ export default function TrustScorePage() {
       return (
         <CardContent>
           <div className="flex flex-col items-center justify-center h-64 text-center">
-            <p className="text-muted-foreground mb-4">Could not retrieve score. Click the button below to try again.</p>
+            <p className="text-muted-foreground mb-4">Click the button below to calculate your score.</p>
           </div>
         </CardContent>
       );
