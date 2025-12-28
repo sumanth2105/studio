@@ -47,13 +47,13 @@ const documentListForCheck: {
 export default function TrustScorePage() {
   const { holder, setHolder, isLoading: isUserContextLoading } = useUserContext();
   const [scoreResult, setScoreResult] = React.useState<CalculateTrustScoreOutput | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const { user } = useUser();
   const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
 
-  const fetchScore = React.useCallback(async () => {
-    if (isUserContextLoading || isLoadingDocuments || !holder) return;
+  const fetchScore = async () => {
+    if (!holder) return;
 
     setIsLoading(true);
     setError(null);
@@ -96,11 +96,15 @@ export default function TrustScorePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [isUserContextLoading, isLoadingDocuments, holder, uploadedDocuments, setHolder]);
+  };
 
+  // Run only once on initial load
   React.useEffect(() => {
-    fetchScore();
-  }, [fetchScore]);
+    if (!isUserContextLoading && !isLoadingDocuments) {
+        fetchScore();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUserContextLoading, isLoadingDocuments]);
 
   const getCategoryChipColor = (category?: string) => {
     switch (category) {
@@ -222,8 +226,8 @@ export default function TrustScorePage() {
         </CardHeader>
         {renderContent()}
         <CardFooter className="justify-center pt-6">
-            <Button onClick={handleRecalculate} disabled={isLoading || isLoadingDocuments}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <Button onClick={handleRecalculate} disabled={isLoading || isUserContextLoading || isLoadingDocuments}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${(isLoading || isUserContextLoading || isLoadingDocuments) ? 'animate-spin' : ''}`} />
                 Recalculate Score
             </Button>
         </CardFooter>
