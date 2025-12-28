@@ -9,6 +9,12 @@ import {
   getDownloadURL,
 } from 'firebase/storage';
 import {
+  doc,
+  setDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
+import {
   Card,
   CardContent,
   CardDescription,
@@ -25,14 +31,14 @@ import {
   Upload,
   AlertCircle,
   FileText,
+  Badge,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useFirebase } from '@/firebase/provider';
-import { useUser } from '@/firebase/provider';
+import { useFirebase, useUser } from '@/firebase';
 import { useDocuments } from '@/hooks/use-documents';
 
 type DocumentType =
@@ -49,41 +55,12 @@ const documentList: {
   description: string;
   required?: boolean;
 }[] = [
-  {
-    id: 'aadhaar',
-    name: 'Aadhaar Card',
-    description: 'For identity and address verification.',
-    required: true,
-  },
-  {
-    id: 'pan',
-    name: 'PAN Card',
-    description: 'For financial verification.',
-  },
-  {
-    id: 'policy',
-    name: 'Insurance Policy Document',
-    description: 'The complete policy document.',
-    required: true,
-  },
-  {
-    id: 'premium_proof',
-    name: 'Premium Payment Proof',
-    description: 'Latest premium payment receipt.',
-    required: true,
-  },
-  {
-    id: 'bank_proof',
-    name: 'Bank Proof',
-    description: 'Cancelled cheque or bank passbook first page.',
-    required: true,
-  },
-  {
-    id: 'self_declaration',
-    name: 'Self-Declaration Form',
-    description: 'A signed self-declaration form is mandatory for trust score calculation.',
-    required: true,
-  },
+  { id: 'aadhaar', name: 'Aadhaar Card', description: 'For identity and address verification.', required: true },
+  { id: 'pan', name: 'PAN Card', description: 'For financial verification.' },
+  { id: 'policy', name: 'Insurance Policy Document', description: 'The complete policy document.', required: true },
+  { id: 'premium_proof', name: 'Premium Payment Proof', description: 'Latest premium payment receipt.', required: true },
+  { id: 'bank_proof', name: 'Bank Proof', description: 'Cancelled cheque or bank passbook first page.', required: true },
+  { id: 'self_declaration', name: 'Self-Declaration Form', description: 'A signed self-declaration form is mandatory for trust score calculation.', required: true },
 ];
 
 const selfDeclarationText = [
@@ -96,19 +73,17 @@ const selfDeclarationText = [
     "I understand that emergency treatment approvals may be provided based on system trust evaluation and that final claim settlement may occur later.",
 ];
 
-
 export default function DocumentsPage() {
   const { toast } = useToast();
   const { user } = useUser();
+  const { firestore } = useFirebase();
   const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
   
   const [files, setFiles] = useState<Record<DocumentType, File | null>>({
     aadhaar: null, pan: null, policy: null, premium_proof: null, bank_proof: null, self_declaration: null,
   });
   
-  const [uploadStatus, setUploadStatus] = useState<
-    Record<DocumentType, 'idle' | 'uploading' | 'uploaded' | 'error'>
-  >({
+  const [uploadStatus, setUploadStatus] = useState<Record<DocumentType, 'idle' | 'uploading' | 'uploaded' | 'error' | 'not-uploaded'>>({
     aadhaar: 'idle', pan: 'idle', policy: 'idle', premium_proof: 'idle', bank_proof: 'idle', self_declaration: 'idle',
   });
 
@@ -120,30 +95,26 @@ export default function DocumentsPage() {
   }, []);
   
   useEffect(() => {
-    if (user && uploadedDocuments) {
-      const newStatus: typeof uploadStatus = {...uploadStatus};
-      const uploadedDocTypes = new Set(uploadedDocuments.map(doc => doc.fileType));
+    if (!isLoadingDocuments && uploadedDocuments) {
+      const newStatus: typeof uploadStatus = {} as typeof uploadStatus;
+      const uploadedDocTypes = new Set(uploadedDocuments.map(doc => doc.fileType as DocumentType));
       
-      (Object.keys(newStatus) as DocumentType[]).forEach(docId => {
-        if (newStatus[docId] !== 'uploading') {
-          newStatus[docId] = uploadedDocTypes.has(docId) ? 'uploaded' : 'idle';
-        }
-      });
+      for (const doc of documentList) {
+        newStatus[doc.id] = uploadedDocTypes.has(doc.id) ? 'uploaded' : 'not-uploaded';
+      }
       setUploadStatus(newStatus);
     }
-  }, [user, uploadedDocuments]);
+  }, [uploadedDocuments, isLoadingDocuments]);
 
-
-  const handleFileChange = ( docId: DocumentType, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (docId: DocumentType, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setFiles((prev) => ({ ...prev, [docId]: file }));
-      setUploadStatus((prev) => ({ ...prev, [docId]: 'idle' }));
     }
   };
 
-  const handleUpload = (docId: DocumentType) => {
-    if (!user) {
+  const handleUpload = async (docId: DocumentType) => {
+    if (!user || !firestore) {
       toast({ variant: 'destructive', title: 'You must be logged in to upload documents.' });
       return;
     }
@@ -153,7 +124,8 @@ export default function DocumentsPage() {
     setUploadStatus((prev) => ({ ...prev, [docId]: 'uploading' }));
 
     const storage = getStorage();
-    const storageRef = ref(storage, `documents/${user.uid}/${docId}_${file.name}`);
+    const documentId = uuidv4();
+    const storageRef = ref(storage, `documents/${user.uid}/${docId}_${documentId}_${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     uploadTask.on(
@@ -168,26 +140,60 @@ export default function DocumentsPage() {
           description: `Could not upload ${documentList.find(d => d.id === docId)?.name}. Please try again.`,
         });
       },
-      () => {
-        setUploadStatus((prev) => ({ ...prev, [docId]: 'uploaded' }));
-        setFiles(prev => ({...prev, [docId]: null})); 
-        toast({
-          title: 'Upload Successful',
-          description: `${documentList.find(d => d.id === docId)?.name} has been uploaded.`,
-        });
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          const docRef = doc(firestore, 'insuranceHolders', user.uid, 'documents', documentId);
+          
+          await setDoc(docRef, {
+            id: documentId,
+            userId: user.uid,
+            fileName: file.name,
+            fileUrl: downloadURL,
+            fileType: docId,
+            createdAt: serverTimestamp(),
+          });
+          
+          setUploadStatus((prev) => ({ ...prev, [docId]: 'uploaded' }));
+          setFiles(prev => ({...prev, [docId]: null})); 
+          toast({
+            title: 'Upload Successful',
+            description: `${documentList.find(d => d.id === docId)?.name} has been uploaded.`,
+          });
+
+        } catch (dbError) {
+             console.error('Firestore error:', dbError);
+            setUploadStatus((prev) => ({ ...prev, [docId]: 'error' }));
+            toast({
+              variant: 'destructive',
+              title: 'Database Error',
+              description: 'File uploaded, but failed to save details. Please contact support.',
+            });
+        }
       }
     );
   };
   
   const handleDeclarationSubmit = async () => {
-       if (!user) {
+       if (!user || !firestore) {
         toast({ variant: 'destructive', title: 'You must be logged in.' });
         return;
       }
       setUploadStatus((prev) => ({ ...prev, self_declaration: 'uploading' }));
       
       try {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          const documentId = uuidv4();
+          const docRef = doc(firestore, 'insuranceHolders', user.uid, 'documents', documentId);
+
+           await setDoc(docRef, {
+            id: documentId,
+            userId: user.uid,
+            fileName: 'Self-Declaration',
+            fileUrl: '',
+            fileType: 'self_declaration',
+            createdAt: serverTimestamp(),
+          });
+
           setUploadStatus((prev) => ({ ...prev, self_declaration: 'uploaded' }));
           toast({
               title: 'Declaration Submitted',
@@ -204,7 +210,7 @@ export default function DocumentsPage() {
       }
   };
 
-  const getStatusIcon = (status: 'idle' | 'uploading' | 'uploaded' | 'error', docId: DocumentType) => {
+  const getStatusContent = (status: 'idle' | 'uploading' | 'uploaded' | 'error' | 'not-uploaded') => {
     switch (status) {
       case 'uploading':
         return <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />;
@@ -212,17 +218,13 @@ export default function DocumentsPage() {
         return <CheckCircle className="h-5 w-5 text-green-600" />;
       case 'error':
         return <AlertCircle className="h-5 w-5 text-destructive" />;
+      case 'not-uploaded':
+          return <Paperclip className="h-5 w-5 text-muted-foreground" />;
       default:
-        return docId === 'self_declaration' ? <FileText className="h-5 w-5 text-muted-foreground" /> : <Paperclip className="h-5 w-5 text-muted-foreground" />;
+        return <Paperclip className="h-5 w-5 text-muted-foreground" />;
     }
   };
   
-  const getSelectButtonText = (docId: DocumentType) => {
-    if (uploadStatus[docId] === 'uploaded') return 'Update File';
-    if (files[docId]) return 'Change File';
-    return 'Select File';
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -233,12 +235,12 @@ export default function DocumentsPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {(isLoadingDocuments && !user) && <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}
-        {user && documentList.map((doc) => (
+        {isLoadingDocuments && <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}
+        {!isLoadingDocuments && documentList.map((doc) => (
           <div key={doc.id}>
             {doc.id === 'self_declaration' ? (
                  <div className="flex flex-col md:flex-row items-start gap-4 p-4 border rounded-lg">
-                    <div className="flex-shrink-0 mt-1">{getStatusIcon(uploadStatus[doc.id], doc.id)}</div>
+                    <div className="flex-shrink-0 mt-1">{getStatusContent(uploadStatus[doc.id])}</div>
                      <div className="flex-1 space-y-4">
                         <h4 className="font-semibold">
                             {doc.name} {doc.required && <span className="text-destructive">*</span>}
@@ -272,7 +274,8 @@ export default function DocumentsPage() {
                                     </Button>
                                 </>
                              ) : (
-                                 <p className="text-sm text-green-600 font-medium mt-2">
+                                 <p className="text-sm text-green-600 font-medium mt-2 flex items-center gap-2">
+                                    <CheckCircle className="h-4 w-4" />
                                     Declaration submitted.
                                 </p>
                              )}
@@ -287,48 +290,55 @@ export default function DocumentsPage() {
                 </div>
             ) : (
              <div className="flex flex-col md:flex-row items-center gap-4 p-4 border rounded-lg">
-                <div className="flex-shrink-0">{getStatusIcon(uploadStatus[doc.id], doc.id)}</div>
+                <div className="flex-shrink-0">{getStatusContent(uploadStatus[doc.id])}</div>
                 <div className="flex-1">
                     <h4 className="font-semibold">
                         {doc.name} {doc.required && <span className="text-destructive">*</span>}
                     </h4>
                     <p className="text-sm text-muted-foreground">{doc.description}</p>
-                     {files[doc.id] && uploadStatus[doc.id] !== 'uploaded' && (
-                        <p className="text-sm text-primary mt-1">{files[doc.id]?.name}</p>
+                     {files[doc.id] && (
+                        <p className="text-sm text-primary mt-1 font-mono">{files[doc.id]?.name}</p>
                      )}
-                     {uploadStatus[doc.id] === 'uploaded' && (
+                     {uploadStatus[doc.id] === 'uploaded' && !files[doc.id] && (
                         <p className="text-sm text-green-600 font-medium mt-1">
-                           {files[doc.id]?.name || 'Previously uploaded'}
+                           Document uploaded.
                         </p>
                      )}
                 </div>
-                <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
-                   <Input
-                    id={doc.id}
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => handleFileChange(doc.id, e)}
-                    disabled={uploadStatus[doc.id] === 'uploading'}
-                  />
-                  <Button asChild variant="outline" className="flex-1">
-                    <label htmlFor={doc.id} className='cursor-pointer'>
-                      <FileUp className='mr-2' />
-                      {getSelectButtonText(doc.id)}
-                    </label>
-                  </Button>
-                  <Button
-                    onClick={() => handleUpload(doc.id)}
-                    disabled={!files[doc.id] || uploadStatus[doc.id] === 'uploading'}
-                    className="flex-1"
-                  >
-                    {uploadStatus[doc.id] === 'uploading' ? (
-                      <Loader2 className="animate-spin" />
-                    ) : (
-                      <Upload />
-                    )}
-                    <span className="ml-2 hidden sm:inline">Upload</span>
-                  </Button>
-                </div>
+                {uploadStatus[doc.id] !== 'uploaded' ? (
+                    <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
+                    <Input
+                        id={doc.id}
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => handleFileChange(doc.id, e)}
+                        disabled={uploadStatus[doc.id] === 'uploading'}
+                    />
+                    <Button asChild variant="outline" className="flex-1">
+                        <label htmlFor={doc.id} className='cursor-pointer'>
+                        <FileUp className='mr-2 h-4 w-4' />
+                        Select File
+                        </label>
+                    </Button>
+                    <Button
+                        onClick={() => handleUpload(doc.id)}
+                        disabled={!files[doc.id] || uploadStatus[doc.id] === 'uploading'}
+                        className="flex-1"
+                    >
+                        {uploadStatus[doc.id] === 'uploading' ? (
+                        <Loader2 className="animate-spin h-4 w-4" />
+                        ) : (
+                        <Upload className="h-4 w-4" />
+                        )}
+                        <span className="ml-2 hidden sm:inline">Upload</span>
+                    </Button>
+                    </div>
+                ) : (
+                    <Button variant="secondary" disabled>
+                        <CheckCircle className="mr-2 h-4 w-4"/>
+                        Uploaded
+                    </Button>
+                )}
             </div>
             )}
           </div>
@@ -337,5 +347,3 @@ export default function DocumentsPage() {
     </Card>
   );
 }
-
-    
