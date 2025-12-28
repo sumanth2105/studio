@@ -47,9 +47,8 @@ const documentListForCheck: {
 export default function TrustScorePage() {
   const [scoreResult, setScoreResult] =
     React.useState<CalculateTrustScoreOutput | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [hasCalculated, setHasCalculated] = React.useState(false);
 
   const { user } = useUser();
   const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
@@ -101,16 +100,8 @@ export default function TrustScorePage() {
       setError('Could not calculate trust score. Please try again later.');
     } finally {
       setIsLoading(false);
-      setHasCalculated(true);
     }
-  }, [isLoading, isLoadingDocuments, uploadedDocuments]); // Stable dependencies
-
-  React.useEffect(() => {
-    // This effect runs only once when documents are loaded for the first time.
-    if (!isLoadingDocuments && !hasCalculated) {
-      fetchScore();
-    }
-  }, [isLoadingDocuments, hasCalculated, fetchScore]);
+  }, [isLoading, isLoadingDocuments, uploadedDocuments, mockHolder, mockClaims]);
 
   const getCategoryChipColor = (category?: string) => {
     switch (category) {
@@ -128,7 +119,6 @@ export default function TrustScorePage() {
   };
   
   const handleRecalculate = () => {
-    setHasCalculated(false); // Allow fetchScore to run again
     fetchScore();
   }
 
@@ -235,12 +225,14 @@ export default function TrustScorePage() {
           </CardDescription>
         </CardHeader>
         {renderContent()}
-         <CardFooter className="justify-center pt-6">
-            <Button onClick={handleRecalculate} disabled={isLoading || isLoadingDocuments}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Recalculate Score
-            </Button>
-        </CardFooter>
+        {scoreResult && (
+             <CardFooter className="justify-center pt-6">
+                <Button onClick={handleRecalculate} disabled={isLoading || isLoadingDocuments}>
+                    <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    Recalculate Score
+                </Button>
+            </CardFooter>
+        )}
       </Card>
     </div>
   );
