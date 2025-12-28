@@ -47,7 +47,7 @@ const documentListForCheck: {
 export default function TrustScorePage() {
   const { holder, setHolder, isLoading: isUserContextLoading } = useUserContext();
   const [scoreResult, setScoreResult] = React.useState<CalculateTrustScoreOutput | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true); // Start loading initially
+  const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const { user } = useUser();
   const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
@@ -86,9 +86,10 @@ export default function TrustScorePage() {
         },
         fraudIndicators: holder.fraudIndicators,
       });
-
+      
       setScoreResult(result);
       if (result) {
+        // IMPORTANT: This is the fix. We update the central context *outside* the fetch callback.
         setHolder(prevHolder => {
             if (prevHolder && prevHolder.trustScore !== result.score) {
                 return { ...prevHolder, trustScore: result.score };
@@ -105,13 +106,11 @@ export default function TrustScorePage() {
   }, [holder, uploadedDocuments, setHolder]);
 
   React.useEffect(() => {
-    // Only run on initial load when all data is ready
-    if (!initialLoadDone.current && !isUserContextLoading && !isLoadingDocuments && holder && uploadedDocuments) {
-        initialLoadDone.current = true; // Prevent this from running again automatically
+    if (initialLoadDone.current) return;
+    
+    if (!isUserContextLoading && !isLoadingDocuments && holder && uploadedDocuments) {
+        initialLoadDone.current = true;
         fetchScore();
-    } else if (!isUserContextLoading && !isLoadingDocuments && !initialLoadDone.current) {
-        // Handle case where data is ready but fetch hasn't run, and it's not the initial auto-run
-        setIsLoading(false);
     }
   }, [isUserContextLoading, isLoadingDocuments, holder, uploadedDocuments, fetchScore]);
 
@@ -134,7 +133,8 @@ export default function TrustScorePage() {
     fetchScore();
   }
   
-  const isPageLoading = (isLoading || isUserContextLoading || isLoadingDocuments) && !scoreResult;
+  const isPageLoading = isLoading && !scoreResult;
+  const isButtonDisabled = isLoading || isUserContextLoading || isLoadingDocuments;
 
   return (
     <div className="grid gap-6">
@@ -164,7 +164,7 @@ export default function TrustScorePage() {
         ) : scoreResult && holder ? (
           <CardContent className="grid md:grid-cols-2 gap-8 items-center">
             <div className="flex flex-col items-center justify-center p-6 bg-card-foreground/5 rounded-lg">
-              <TrustScoreGauge score={holder.trustScore} />
+              <TrustScoreGauge score={scoreResult.score} />
               <div
                 className={`mt-4 px-3 py-1 text-sm font-semibold rounded-full ${getCategoryChipColor(
                   scoreResult.category
@@ -195,8 +195,8 @@ export default function TrustScorePage() {
             </CardContent>
         )}
          <CardFooter className="justify-center pt-6">
-            <Button onClick={handleRecalculate} disabled={isLoading || isUserContextLoading || isLoadingDocuments}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${(isLoading || isUserContextLoading || isLoadingDocuments) ? 'animate-spin' : ''}`} />
+            <Button onClick={handleRecalculate} disabled={isButtonDisabled}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isButtonDisabled ? 'animate-spin' : ''}`} />
                 Recalculate Score
             </Button>
         </CardFooter>
