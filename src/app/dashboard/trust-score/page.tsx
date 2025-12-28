@@ -53,7 +53,7 @@ export default function TrustScorePage() {
   const { user } = useUser();
   const { documents: uploadedDocuments, isLoading: isLoadingDocuments } = useDocuments(user?.uid);
 
-  const fetchScore = React.useCallback(async () => {
+  const fetchScore = async () => {
     if (isLoadingDocuments) return; // Wait for documents to be loaded
 
     setIsLoading(true);
@@ -101,7 +101,7 @@ export default function TrustScorePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoadingDocuments, uploadedDocuments]);
+  };
 
   const getCategoryChipColor = (category?: string) => {
     switch (category) {
