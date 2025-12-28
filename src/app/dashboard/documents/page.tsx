@@ -10,13 +10,13 @@ import {
 } from 'firebase/storage';
 import {
   collection,
-  addDoc,
   serverTimestamp,
   query,
   where,
   getDocs,
   doc,
   setDoc,
+  addDoc,
 } from 'firebase/firestore';
 import {
   Card,
@@ -45,6 +45,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFirebase } from '@/firebase/provider';
 import { useUser } from '@/firebase/provider';
 import { useDocuments } from '@/hooks/use-documents';
+import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { v4 as uuidv4 } from 'uuid';
 
 type DocumentType =
   | 'aadhaar'
@@ -199,18 +201,18 @@ export default function DocumentsPage() {
           const q = query(documentsCollection, where("fileType", "==", docId));
           const querySnapshot = await getDocs(q);
 
-          let docRef;
           if (!querySnapshot.empty) {
             // Update existing document
-            docRef = querySnapshot.docs[0].ref;
-            await setDoc(docRef, {
+            const docRef = querySnapshot.docs[0].ref;
+             setDocumentNonBlocking(docRef, {
               fileName: file.name,
               fileUrl: downloadURL,
               createdAt: serverTimestamp(),
             }, { merge: true });
           } else {
             // Add new document
-            await addDoc(documentsCollection, {
+             addDocumentNonBlocking(documentsCollection, {
+              id: uuidv4(),
               userId: user.uid,
               fileName: file.name,
               fileUrl: downloadURL,
@@ -262,9 +264,9 @@ export default function DocumentsPage() {
 
             if (!querySnapshot.empty) {
                 const docRef = querySnapshot.docs[0].ref;
-                await setDoc(docRef, dataToSave, { merge: true });
+                setDocumentNonBlocking(docRef, dataToSave, { merge: true });
             } else {
-                await addDoc(documentsCollection, dataToSave);
+                addDocumentNonBlocking(documentsCollection, { id: uuidv4(), ...dataToSave });
             }
 
             setUploadStatus((prev) => ({ ...prev, self_declaration: 'uploaded' }));
@@ -400,7 +402,7 @@ export default function DocumentsPage() {
                   </Button>
                   <Button
                     onClick={() => handleUpload(doc.id)}
-                    disabled={!files[doc.id] || uploadStatus[doc.id] === 'uploading'}
+                    disabled={!files[docid] || uploadStatus[doc.id] === 'uploading'}
                     className="flex-1"
                   >
                     {uploadStatus[doc.id] === 'uploading' ? (
