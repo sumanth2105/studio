@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -83,14 +84,16 @@ const prompt = ai.definePrompt({
   5.  **Document Completeness (Max 10 pts):** All mandatory docs (+10), Missing one (-5).
   6.  **Fraud Penalties (Max -15 pts):** Past fraud alert (-10), Active investigation (-15).
 
+  **IMPORTANT FINAL RULE:** The final calculated score must NOT exceed 85. If the total score is higher than 85, it must be capped at 85.
+
   **Input Data:**
   \`\`\`json
   {{{jsonData}}}
   \`\`\`
 
   **Your Task:**
-  1.  Calculate the final Trust Score (0-100) based on the logic above.
-  2.  Categorize the score: 80-100 (Highly Trusted), 60-79 (Trusted), 40-59 (Moderate Risk), <40 (High Risk).
+  1.  Calculate the final Trust Score (0-100, capped at 85) based on the logic above.
+  2.  Categorize the score: 80-85 (Highly Trusted), 60-79 (Trusted), 40-59 (Moderate Risk), <40 (High Risk). Note the change in the 'Highly Trusted' range.
   3.  Provide a concise, user-friendly explanation with 3-5 bullet points highlighting the main reasons for the score.
   4.  Offer 2-3 actionable suggestions for score improvement.
   `,
