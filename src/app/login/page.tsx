@@ -45,7 +45,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useAuth } from '@/firebase';
+import { useAuth, FirebaseClientProvider } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
 
 
@@ -641,3 +641,5 @@ export default function LoginPage() {
         </FirebaseClientProvider>
     )
 }
+
+    
