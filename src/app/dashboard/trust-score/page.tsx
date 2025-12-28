@@ -77,7 +77,7 @@ export default function TrustScorePage() {
           premiumOverdueDays: premiumOverdueDays,
         },
         paymentHistory: {
-          onTimeRatio: holder.paymentHistory.onTimeRatio,
+          onTimeRatio: holder.paymentHistory.onTimeRatio, 
         },
         claimHistory: {
           totalClaims: mockClaims.length,
@@ -99,7 +99,6 @@ export default function TrustScorePage() {
   }, [isUserContextLoading, isLoadingDocuments, holder, uploadedDocuments, setHolder]);
 
   React.useEffect(() => {
-    // Automatically fetch score when the component mounts and dependencies are ready.
     fetchScore();
   }, [fetchScore]);
 
@@ -151,10 +150,6 @@ export default function TrustScorePage() {
         <CardContent>
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <p className="text-muted-foreground mb-4">Could not retrieve score. Click the button below to try again.</p>
-            <Button onClick={handleRecalculate} disabled={isLoading || isLoadingDocuments}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Calculate Score
-            </Button>
           </div>
         </CardContent>
       );
@@ -226,14 +221,12 @@ export default function TrustScorePage() {
           </CardDescription>
         </CardHeader>
         {renderContent()}
-        {(scoreResult || error) && (
-             <CardFooter className="justify-center pt-6">
-                <Button onClick={handleRecalculate} disabled={isLoading || isLoadingDocuments}>
-                    <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                    Recalculate Score
-                </Button>
-            </CardFooter>
-        )}
+        <CardFooter className="justify-center pt-6">
+            <Button onClick={handleRecalculate} disabled={isLoading || isLoadingDocuments}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Recalculate Score
+            </Button>
+        </CardFooter>
       </Card>
     </div>
   );
